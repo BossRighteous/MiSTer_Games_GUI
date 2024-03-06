@@ -16,7 +16,7 @@ class SwitchRes():
     refresh_rate: int = 60
 
 class UdpClient():
-    UDP_IP = "127.0.0.1"
+    UDP_IP = "192.168.0.168" # "127.0.0.1"
     UDP_PORT = 32100
     MTU_BLOCK_SIZE = 1470
 
