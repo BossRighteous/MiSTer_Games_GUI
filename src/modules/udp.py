@@ -4,20 +4,50 @@ from socket import AF_INET
 from socket import SOCK_DGRAM
 
 class SwitchRes():
-    pixel_clock: float = 4.905
-    hactive: int = 256
-    hbegin: int = 264
-    hend: int = 287
-    htotal: int = 312
-    vactive: int = 240
-    vbegin: int = 241
-    vend: int = 244
-    vtotal: int = 262
-    refresh_rate: int = 60
+    pixel_clock: float
+    hactive: int
+    hbegin: int
+    hend: int
+    htotal: int
+    vactive: int
+    vbegin: int
+    vend: int
+    vtotal: int
+    refresh_rate: int
+
+    def __init__(self, modeline: str = "", refresh_rate: int = 60) -> None:
+        self.pixel_clock = 4.905
+        self.hactive = 256
+        self.hbegin = 264
+        self.hend = 287
+        self.htotal = 312
+        self.vactive = 240
+        self.vbegin = 241
+        self.vend = 244
+        self.vtotal = 262
+        self.refresh_rate= refresh_rate
+        self._parse_modeline(modeline)
+    
+    def _parse_modeline(self, modeline: str) -> None:
+        parts = modeline.split(" ")
+        if modeline == "" or len(parts) != 9:
+            return
+        self.pixel_clock = float(parts[0])
+        self.hactive = int(parts[1])
+        self.hbegin = int(parts[2])
+        self.hend = int(parts[3])
+        self.htotal = int(parts[4])
+        self.vactive = int(parts[5])
+        self.vbegin = int(parts[6])
+        self.vend = int(parts[7])
+        self.vtotal = int(parts[8])
+        
+        
+
 
 class UdpClient():
-    UDP_IP = "192.168.0.168" # "127.0.0.1"
-    UDP_PORT = 32100
+    UDP_IP: str
+    UDP_PORT: int
     MTU_BLOCK_SIZE = 1470
 
     sock: socket
@@ -25,10 +55,12 @@ class UdpClient():
     height: int
     frame: int
 
-    def __init__(self):
+    def __init__(self, udp_port: int = 32100, udp_ip: str = '127.0.0.1'):
         self.sock = socket(AF_INET, # Internet
             SOCK_DGRAM) # UDP        
         #self.sock.bind((UDP_IP, UDP_PORT))
+        self.UDP_IP = udp_ip
+        self.UDP_PORT = udp_port
         self.width = 256
         self.height = 240
         self.frame = 0
