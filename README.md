@@ -5,7 +5,15 @@ Runs on MiSTer, using Groovy Mister core for headless graphics processing.
 
 Utilities to allow parsing of EmulationStation gamelist.xml and image data in simple binary DAT files for fast consumption.
 
-# No Stable Build Available
+# Semi-stable install directions, needs love
+- ssh to MiSTer
+- `cd /media/fat/Scripts/`
+- `mkdir MiSTer_Games_GUI`
+- (On other computer)
+- clone repo and rsync src/ to `/media/fat/Scripts/
+- (Back on MiSTer ssh shell)
+- `cd /media/fat/Scripts/MiSTer_Games_GUI/`
+- `python3 mister_game_gui.py`
 
 ## Goals
 - Provide a simple analog friendly graphical interface for browsing your library
@@ -22,14 +30,22 @@ The GUI requires the (currently dev) GroovyMiSTer core for meaningful operation
 - Executable on MiSTer via SSH
 - UDP connection to GroovyMiSTer via localhost loopback
 - 256x240p@60hz default resolution rendering
-- Blit Loop @6hz
+- Blit Loop @60hz
 - Rectangle Bitmap region composite and buffer manipulation
+- Image loading from data_utils DAT creation
+- Bitmap Font loading from data_utils DAT creation
+- FontSheet with trimmable text box rendering
+- SpriteSheet cell based blitting minimally working
+- Awkward implementation of CLI args, will rework
+- "Themes" abstract with hooks for rendering
+- Idle frame queues for cross-frame work or deferred blit sequencing
 
 ## Blocking Issues
 - No input listening is currently available in GroovyMiSTer or `/dev/input/` and must be simulated
 
 ## Roadmap
-- Sprite Sheet blitting
-- Font DAT generation and blitting
-- gamelist.xml parsing to DAT file
+- Reworking args and app level boot/settings
 - CLI utility for remote input simulation
+- Arcade15 theme support for state machine and 'screens'
+- Will expiriment with direct XML parsing and PNG native loading
+- Othewise utils for gamelist.xml parsing and images to DAT files
