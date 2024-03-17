@@ -2,47 +2,7 @@ import struct
 from socket import socket
 from socket import AF_INET
 from socket import SOCK_DGRAM
-
-class SwitchRes():
-    pixel_clock: float
-    hactive: int
-    hbegin: int
-    hend: int
-    htotal: int
-    vactive: int
-    vbegin: int
-    vend: int
-    vtotal: int
-    refresh_rate: int
-
-    def __init__(self, modeline: str = "", refresh_rate: int = 60) -> None:
-        self.pixel_clock = 4.905
-        self.hactive = 256
-        self.hbegin = 264
-        self.hend = 287
-        self.htotal = 312
-        self.vactive = 240
-        self.vbegin = 241
-        self.vend = 244
-        self.vtotal = 262
-        self.refresh_rate= refresh_rate
-        self._parse_modeline(modeline)
-    
-    def _parse_modeline(self, modeline: str) -> None:
-        parts = modeline.split(" ")
-        if modeline == "" or len(parts) != 9:
-            return
-        self.pixel_clock = float(parts[0])
-        self.hactive = int(parts[1])
-        self.hbegin = int(parts[2])
-        self.hend = int(parts[3])
-        self.htotal = int(parts[4])
-        self.vactive = int(parts[5])
-        self.vbegin = int(parts[6])
-        self.vend = int(parts[7])
-        self.vtotal = int(parts[8])
-        
-        
+from modules.switchres import SwitchRes
 
 
 class UdpClient():
@@ -69,6 +29,7 @@ class UdpClient():
         self.sock.sendto(packet, (self.UDP_IP, self.UDP_PORT))
 
     def cmd_init(self):
+        print("init send on UDP "+self.UDP_IP)
         buffer: bytearray = bytearray(4)
         struct.pack_into('<B', buffer, 0, 2) # CMD
         struct.pack_into('<B', buffer, 1, 0) # lz4 compression flag

@@ -1,8 +1,7 @@
-from typing import Callable, Dict, List, TypeVar
+
 from modules.graphics import Bitmap
+from modules.input import Inputs
 
-
-CtxSelf = TypeVar("CtxSelf", bound="LoopContext")
 class LoopContext():
     frame_count: int
     frame_tick: float

@@ -1,6 +1,6 @@
 import struct
 from math import floor
-from typing import Tuple
+from typing import Tuple, TypeVar
 from typing import List
 from typing import Optional
 from typing import Union
@@ -23,6 +23,7 @@ class Color():
         ]
 
 
+BitmapSelf = TypeVar("BitmapSelf", bound="Bitmap")
 class Bitmap():
     PX_SIZE = 3
     # Byte Order: BGR
@@ -31,9 +32,12 @@ class Bitmap():
     bytes: bytearray
     transparent: int
 
-    # Allow position for value storage, don't pre-calculate
+    # Allow position relative to blit target, no nesting/children
     x: int
-    y: int
+    y: int    
+
+    # text tracking can be useful
+    chars: Union[str, bytearray]
 
     def __init__(self, width: int, height: int, initial_bytes: Optional[bytearray] = None) -> None:
         self.transparent = -1
@@ -42,6 +46,7 @@ class Bitmap():
         self.bytes = initial_bytes if initial_bytes is not None else bytearray(width * height * self.PX_SIZE)
         self.x = 0
         self.y = 0
+        self.chars = bytearray(0)
     
     def set_pixel(self, x: int, y: int, color_bytes:bytearray) -> None:
         offset: int = self._get_pixel_byte_offset(x, y)
@@ -93,13 +98,21 @@ class Bitmap():
         new_bytes.extend(self.bytes[offset:])
         self.bytes = new_bytes
     
+    def blit_bitmap(self, bitmap:BitmapSelf) -> None:
+        self.blit_rect(bitmap.x, bitmap.y, bitmap.width, bitmap.height, bitmap.bytes)
+    
     def replace_colors(self, existing_color_bytes: bytearray, new_color_bytes: bytearray):
         # assumes triplet bytes
         self.bytes = self.bytes.replace(existing_color_bytes, new_color_bytes)
     
-    # copy on get to freeze reference
+    def set_position(self, x:int, y:int) -> None:
+        self.x = x
+        self.y = y
+    
     def get_bytes(self) -> bytearray:
-        return self.bytes[0:]
+        return self.bytes
+        # copy on get to freeze reference?
+        # return self.bytes[0:]
 
 
 class SpriteSheet(Bitmap):
@@ -149,6 +162,7 @@ class FontSheet(SpriteSheet):
     
     def make_text_bitmap(self, chars: Union[str, bytearray], max_width: int, max_height: int, trim_size: bool) -> Bitmap:
         tmp_bmp = Bitmap(max_width, max_height)
+        tmp_bmp.chars = chars
         max_cell_count = floor((max_width/self.cell_width) * (max_height/self.cell_height))
         blit_x = 0
         blit_y = 0
