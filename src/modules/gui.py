@@ -72,7 +72,6 @@ class GUI():
             self.run_loop = False
 
     def _on_tick(self):
-            self.inputs.poll()
             self.theme.on_tick()
 
     def _post_loop(self) -> None:

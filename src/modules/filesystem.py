@@ -1,5 +1,6 @@
 import struct
 from os import scandir, DirEntry
+from typing import Union
 from .graphics import FontSheet
 from .graphics import Bitmap
 
@@ -37,6 +38,6 @@ class FileSystem:
     def get_direntry_iterator(path: str):
         return scandir(path)
     
-    def next_direntry(iterator) -> DirEntry:
-        return next(iterator)
+    def next_direntry(iterator) -> Union[DirEntry, None]:
+        return next(iterator, None)
 

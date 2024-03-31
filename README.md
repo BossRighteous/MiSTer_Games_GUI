@@ -1,15 +1,22 @@
 ### Notice
-This is a development WIP! All planned features are 'proven' in isolation but full support is in progress. \
-Currently Supported Features listed below
+Currently migrating to Go for the rest of dev
+
+After some initial work in python, I found the runtime too slow to be usable.
+
+`src` is python, will be deleted when Go is working better
+`src/cmd` are go paths
 
 # MiSTer_Games_GUI
-Low-resolution analog friendly MiSTer Python script GUI for your game library.
+Low-resolution analog friendly MiSTer script GUI for your game library.
 
-Runs on MiSTer, using Groovy Mister core for headless graphics processing.
+Will run on MiSTer ARM chip, using Groovy Mister core for headless graphics processing.
 
-Will include utilities for data processing from scrapper API(s). All image data will need transcoded to uncompressed BGR8 bytes
+Will include utilities for data processing from scrapper API(s)? 
 
-# WIP install directions
+# Go install direction
+- build release TBD
+
+# Old Python install directions
 - ssh to MiSTer
 - `cd /media/fat/Scripts/`
 - `mkdir MiSTer_Games_GUI`
@@ -25,16 +32,39 @@ Pull the repo and rsync `src` as needed.
 
 ## Goals
 - Provide a simple analog friendly graphical interface for browsing your library
-- Installable and runnable via sh Script
-- Utilize existing Python3 build available in MiSTer Main
-- Require no external dependencies via PIP or C Bindings
+- Installable via DB json ini
+- Go executable build for Cyclone V chip
+- Require no external dependencies
 - Balance usable interface concerns and responsiveness with single threaded low CPU/Memory demand
-- Offload otherwise expensive computation to off-MiSTer data parsing utilities and DAT files
 
 ## MiSTer Requirements
-The GUI requires the (currently dev) GroovyMiSTer core for meaningful operation
+The GUI requires the (currently dev) GroovyMiSTer core for meaningful operation.
 
-## Currently Supported Features
+I may be a bit behind on versions too
+
+## Go Supported Features
+- UDP connection to GroovyMiSTer via localhost loopback
+- Modeline parsing (hardcoded)
+- GroovyMister API basic implementation
+- Basic blitting of solid color bitmaps
+
+## Go Roadmap
+- Image compositing w/ transparency support
+- Basic FPS Counter
+- Load Image(s) from Disk
+- TTF Font rendering
+- Controller input handling support (wizzo mrext)
+- Directory navigation
+- MGL temp writes for Core/Game loading
+- Display meta-data for selected game
+- Display image(s) for selected game
+- LZ4 compression for GroovyMister API
+- Interlace support
+- Configurable ini settings
+- Alternate or adaptive GUI for 480p vs 240p
+- Scaper to SQLite routine (maybe wizzo mrext)
+
+## Old Python Supported Features
 - Executable on MiSTer via SSH
 - UDP connection to GroovyMiSTer via localhost loopback
 - 256x240p@60hz default resolution rendering
@@ -48,10 +78,3 @@ The GUI requires the (currently dev) GroovyMiSTer core for meaningful operation
 - Idle frame queues for cross-frame work or deferred blit sequencing
 - Joystick input support
 - 24fps stable with unoptimized Joystick and fps output
-
-## Roadmap
-- Implement directory navigation
-- Mock data seeder for meta / image
-- Undecided meta format, XML/JSON/DAT
-- Arcade15 theme state machine and 'screens' containing meta and image data
-- ScreenScraper.fr data util for library parsing
