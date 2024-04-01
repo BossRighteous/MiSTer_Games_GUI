@@ -4,7 +4,7 @@ Currently migrating to Go for the rest of dev
 After some initial work in python, I found the runtime too slow to be usable.
 
 `src` is python, will be deleted when Go is working better
-`src/cmd` are go paths
+`pkg/cmd` are go paths
 
 # MiSTer_Games_GUI
 Low-resolution analog friendly MiSTer script GUI for your game library.
