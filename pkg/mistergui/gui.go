@@ -27,14 +27,25 @@ func (gui *GUI) Setup(surface *Surface, modeline *groovymister.Modeline) {
 	gui.bgColor.g = uint8(rand.IntN(255))
 	gui.bgColor.r = uint8(rand.IntN(255))
 	gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
+	text := []string{
+		"Integer sed est consequat augue scelerisque mollis in at est.",
+		"Nam nec augue facilisis, accumsan turpis vitae, elementum quam.",
+		"Nullam volutpat maximus ex posuere euismod.",
+		"Vivamus nulla nulla, varius ac augue et, vehicula sollicitudin lectus.",
+		"Curabitur vel est quis velit mattis sodales.",
+		"Donec semper urna eu efficitur facilisis.",
+		"Ut rhoncus interdum quam quis malesuada.",
+	}
+	fontImage := DrawText(text)
+	gui.surface.UpdateFromImage(fontImage, fontImage.Bounds())
 }
 
 func (gui *GUI) OnTick(frameCount uint32, delta float64) {
-	gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
+	//gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
 }
 
 func (gui *GUI) TearDown() {
-	gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
+	//gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
 }
 
 func NewGUI() *GUI {

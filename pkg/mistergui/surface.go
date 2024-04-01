@@ -3,6 +3,7 @@ package mistergui
 import (
 	"image"
 	"image/color"
+	"image/draw"
 )
 
 const (
@@ -17,8 +18,9 @@ type Surface struct {
 	image     *image.RGBA
 }
 
-func (surface *Surface) UpdateFromImage(image image.Image, rect image.Rectangle) {
+func (surface *Surface) UpdateFromImage(img image.Image, rect image.Rectangle) {
 	// void
+	draw.Draw(surface.image, rect, img, image.Point{0, 0}, draw.Over)
 	surface.redrawBGR8()
 }
 
