@@ -60,7 +60,9 @@ func main() {
 			fmt.Println("elapsed", elapsed)
 			udpClient.CmdBlit(surface.BGRbytes())
 
+			drawStart := time.Now()
 			gui.OnTick(frameCount, elapsed.Seconds())
+			fmt.Println("OnTick time", time.Now().Sub(drawStart))
 			isBlitting = false
 		}
 

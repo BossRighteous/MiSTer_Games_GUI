@@ -46,13 +46,10 @@ I may be a bit behind on versions too
 - UDP connection to GroovyMiSTer via localhost loopback
 - Modeline parsing (hardcoded)
 - GroovyMister API basic implementation
-- Basic blitting of solid color bitmaps
+- Image/TTF-font embeds and rendering w/ transparency
+- FPS display
 
 ## Go Roadmap
-- Image compositing w/ transparency support
-- Basic FPS Counter
-- Load Image(s) from Disk
-- TTF Font rendering
 - Controller input handling support (wizzo mrext)
 - Directory navigation
 - MGL temp writes for Core/Game loading

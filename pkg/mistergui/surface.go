@@ -15,13 +15,11 @@ type Surface struct {
 	Height    uint16
 	Interlace byte
 	bgr8      []byte
-	image     *image.RGBA
+	image     *image.NRGBA
 }
 
-func (surface *Surface) UpdateFromImage(img image.Image, rect image.Rectangle) {
-	// void
-	draw.Draw(surface.image, rect, img, image.Point{0, 0}, draw.Over)
-	surface.redrawBGR8()
+func (surface *Surface) DrawImage(img image.Image, rect image.Rectangle, sp image.Point, op draw.Op) {
+	draw.Draw(surface.image, rect, img, sp, op)
 }
 
 func (surface *Surface) Fill(r, g, b uint8) {
@@ -30,7 +28,6 @@ func (surface *Surface) Fill(r, g, b uint8) {
 			surface.image.Set(x, y, color.RGBA{r, g, b, 255})
 		}
 	}
-	surface.redrawBGR8()
 }
 
 func (surface *Surface) redrawBGR8() {
@@ -47,6 +44,7 @@ func (surface *Surface) redrawBGR8() {
 }
 
 func (surface *Surface) BGRbytes() []byte {
+	surface.redrawBGR8()
 	return surface.bgr8[:]
 }
 
@@ -62,7 +60,7 @@ func NewSurface(width, height uint16, interlace byte) *Surface {
 		Min: image.Point{0, 0},
 		Max: image.Point{int(width), int(height)},
 	}
-	surface.image = image.NewRGBA(rect)
+	surface.image = image.NewNRGBA(rect)
 	surface.Fill(0, 0, 0)
 	return &surface
 }

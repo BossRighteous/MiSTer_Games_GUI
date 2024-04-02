@@ -19,7 +19,7 @@ func parseFont(fontBytes []byte) *truetype.Font {
 
 var Roboto *truetype.Font = parseFont(*Embeds.RobotoBold)
 
-func DrawText(text []string) *image.RGBA {
+func DrawText(text []string) *image.NRGBA {
 	var (
 		dpi     float64        = 72
 		hinting string         = "full"
@@ -29,7 +29,7 @@ func DrawText(text []string) *image.RGBA {
 	)
 
 	fg, bg := image.Black, image.Transparent
-	rgba := image.NewRGBA(image.Rect(0, 0, 320, 240))
+	rgba := image.NewNRGBA(image.Rect(0, 0, 320, 240))
 	draw.Draw(rgba, rgba.Bounds(), bg, image.Point{0, 0}, draw.Src)
 	c := freetype.NewContext()
 	c.SetDPI(dpi)

@@ -2,6 +2,9 @@ package mistergui
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	"math"
 	"math/rand/v2"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
@@ -14,9 +17,11 @@ type RGB struct {
 }
 
 type GUI struct {
-	bgColor  RGB
-	surface  *Surface
-	modeline *groovymister.Modeline
+	bgColor   RGB
+	surface   *Surface
+	modeline  *groovymister.Modeline
+	fontImage *image.NRGBA
+	psImage   *image.NRGBA
 }
 
 func (gui *GUI) Setup(surface *Surface, modeline *groovymister.Modeline) {
@@ -26,8 +31,9 @@ func (gui *GUI) Setup(surface *Surface, modeline *groovymister.Modeline) {
 	gui.bgColor.b = uint8(rand.IntN(255))
 	gui.bgColor.g = uint8(rand.IntN(255))
 	gui.bgColor.r = uint8(rand.IntN(255))
-	gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
 	text := []string{
+		"",
+		"",
 		"Integer sed est consequat augue scelerisque mollis in at est.",
 		"Nam nec augue facilisis, accumsan turpis vitae, elementum quam.",
 		"Nullam volutpat maximus ex posuere euismod.",
@@ -36,12 +42,22 @@ func (gui *GUI) Setup(surface *Surface, modeline *groovymister.Modeline) {
 		"Donec semper urna eu efficitur facilisis.",
 		"Ut rhoncus interdum quam quis malesuada.",
 	}
-	fontImage := DrawText(text)
-	gui.surface.UpdateFromImage(fontImage, fontImage.Bounds())
+	gui.fontImage = DrawText(text)
+	gui.psImage = PowerstoneImg
+	gui.OnTick(0, 0.0)
 }
 
 func (gui *GUI) OnTick(frameCount uint32, delta float64) {
-	//gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
+	gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
+	gui.surface.DrawImage(gui.psImage, gui.psImage.Bounds(), image.Point{0, 0}, draw.Over)
+	gui.surface.DrawImage(gui.psImage, gui.psImage.Bounds(), image.Point{0, 0}, draw.Over)
+	gui.surface.DrawImage(gui.psImage, gui.psImage.Bounds(), image.Point{0, 0}, draw.Over)
+	gui.surface.DrawImage(gui.fontImage, gui.fontImage.Bounds(), image.Point{0, 0}, draw.Over)
+
+	fpsInt := math.Floor(1 / delta)
+	fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)})
+	gui.surface.DrawImage(fpsImg, fpsImg.Bounds(), image.Point{0, 0}, draw.Over)
+
 }
 
 func (gui *GUI) TearDown() {
