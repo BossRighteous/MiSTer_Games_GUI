@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	mtuBlockSize int32 = 1470 // Build PC
-	//mtuBlockSize       int32 = 65500 //mister local //
-	cmdHeaderClose     byte = 1
-	cmdHeaderInit      byte = 2
-	cmdHeaderSwitchRes byte = 3
-	cmdHeaderBlit      byte = 6
+	//mtuBlockSize int32 = 1470 // Build PC
+	mtuBlockSize       int32 = 65500 //mister local //
+	cmdHeaderClose     byte  = 1
+	cmdHeaderInit      byte  = 2
+	cmdHeaderSwitchRes byte  = 3
+	cmdHeaderBlit      byte  = 6
 )
 
 type UdpClient struct {

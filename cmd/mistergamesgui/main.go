@@ -18,7 +18,7 @@ func main() {
 	modeline := groovymister.ModelineFromString("6.700 320 336 367 426 240 244 247 262")
 	fmt.Println(modeline)
 
-	udpClient := groovymister.NewUdpClient("192.168.0.168")
+	udpClient := groovymister.NewUdpClient("127.0.0.1")
 
 	udpClient.CmdInit()
 	udpClient.CmdSwitchres(modeline)
