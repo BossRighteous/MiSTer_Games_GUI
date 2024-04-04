@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	mtuBlockSize       int16 = 1470
-	cmdHeaderClose     byte  = 1
-	cmdHeaderInit      byte  = 2
-	cmdHeaderSwitchRes byte  = 3
-	cmdHeaderBlit      byte  = 6
+	mtuBlockSize int32 = 1470 // Build PC
+	//mtuBlockSize       int32 = 65500 //mister local //
+	cmdHeaderClose     byte = 1
+	cmdHeaderInit      byte = 2
+	cmdHeaderSwitchRes byte = 3
+	cmdHeaderBlit      byte = 6
 )
 
 type UdpClient struct {
@@ -89,17 +90,28 @@ func (client *UdpClient) CmdBlit(frameBuffer []byte) {
 	client.SendPacket(buffer)
 	start := time.Now()
 	client.SendMTU(frameBuffer)
-	fmt.Println("blit took", time.Now().Sub(start))
+	fmt.Println("blit took", time.Since(start))
 }
 
-func NewUdpClient(host string, port string) UdpClient {
+func (client *UdpClient) PollInput() []byte {
+	buf := make([]byte, 9)
+	rlen, _, err := client.conn.ReadFrom(buf)
+	if err != nil {
+		fmt.Println(err)
+	}
+	input := buf[0:rlen]
+	fmt.Println("input packet:", buf[0:rlen])
+	return input
+}
+
+func NewUdpClient(host string) UdpClient {
 	var client UdpClient
 	client.host = host
-	conn, err := net.ListenPacket("udp4", fmt.Sprintf(":%s", port))
+	conn, err := net.ListenPacket("udp4", ":32101")
 	if err != nil {
 		panic(err)
 	}
-	addr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%s", host, port))
+	addr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:32100", host))
 	if err != nil {
 		panic(err)
 	}

@@ -1,66 +1,59 @@
 package mistergui
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 )
 
-const (
-	bytesPerPixel byte = 3
-)
-
 type Surface struct {
 	Width     uint16
 	Height    uint16
-	Interlace byte
-	bgr8      []byte
-	image     *image.NRGBA
+	Interlace bool
+	Image     *BGR8
+	BgImage   *BGR8
 }
 
-func (surface *Surface) DrawImage(img image.Image, rect image.Rectangle, sp image.Point, op draw.Op) {
-	draw.Draw(surface.image, rect, img, sp, op)
-}
-
-func (surface *Surface) Fill(r, g, b uint8) {
-	for y := range surface.image.Bounds().Dy() {
-		for x := range surface.image.Bounds().Dx() {
-			surface.image.Set(x, y, color.RGBA{r, g, b, 255})
-		}
+func fillImage(img *BGR8, c color.Color) {
+	bounds := img.Bounds()
+	pixels := bounds.Dx() * bounds.Dy()
+	cBGR := ColorToBGR8(c)
+	for i := 0; i < pixels*BGR8BytesPerPixel; i += BGR8BytesPerPixel {
+		img.Pix[i] = cBGR.B
+		img.Pix[i+1] = cBGR.G
+		img.Pix[i+2] = cBGR.R
 	}
 }
 
-func (surface *Surface) redrawBGR8() {
-	var offset int = 0
-	for y := range surface.image.Bounds().Dy() {
-		for x := range surface.image.Bounds().Dx() {
-			r, g, b, _ := surface.image.At(x, y).RGBA()
-			surface.bgr8[offset] = uint8(b)
-			surface.bgr8[offset+1] = uint8(g)
-			surface.bgr8[offset+2] = uint8(r)
-			offset += 3
-		}
-	}
+func (surface *Surface) Fill(c color.Color) {
+	fillImage(surface.Image, c)
 }
 
-func (surface *Surface) BGRbytes() []byte {
-	surface.redrawBGR8()
-	return surface.bgr8[:]
+func (surface *Surface) FillBg(c color.Color) {
+	fillImage(surface.BgImage, c)
 }
 
-func NewSurface(width, height uint16, interlace byte) *Surface {
+func (surface *Surface) Erase(rect image.Rectangle, sp image.Point) {
+	draw.Draw(surface.Image, rect, surface.BgImage, sp, draw.Src)
+}
+
+func (surface *Surface) BGRbytes(oddField bool) []byte {
+	fmt.Println(len(surface.Image.Pix))
+	return surface.Image.Pix
+}
+
+func NewSurface(width, height uint16, interlace bool) *Surface {
 	surface := Surface{
 		Width:     width,
 		Height:    height,
 		Interlace: interlace,
 	}
-	var targetSize uint32 = uint32(width) * uint32(height) * uint32(bytesPerPixel)
-	surface.bgr8 = make([]byte, targetSize)
 	rect := image.Rectangle{
 		Min: image.Point{0, 0},
 		Max: image.Point{int(width), int(height)},
 	}
-	surface.image = image.NewNRGBA(rect)
-	surface.Fill(0, 0, 0)
+	surface.Image = NewBGR8(rect)
+	surface.BgImage = NewBGR8(rect)
 	return &surface
 }

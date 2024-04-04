@@ -5,32 +5,28 @@ import (
 	"image"
 	"image/draw"
 	"math"
-	"math/rand/v2"
+	"math/rand"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
 )
 
-type RGB struct {
-	r uint8
-	g uint8
-	b uint8
-}
-
 type GUI struct {
-	bgColor   RGB
+	bgColor   ColorBGR8
 	surface   *Surface
 	modeline  *groovymister.Modeline
 	fontImage *image.NRGBA
-	psImage   *image.NRGBA
+	psImage   *image.Image
 }
 
 func (gui *GUI) Setup(surface *Surface, modeline *groovymister.Modeline) {
 	fmt.Println("setting up GUI")
 	gui.surface = surface
 	gui.modeline = modeline
-	gui.bgColor.b = uint8(rand.IntN(255))
-	gui.bgColor.g = uint8(rand.IntN(255))
-	gui.bgColor.r = uint8(rand.IntN(255))
+	gui.bgColor = ColorBGR8{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255))}
+	fmt.Println(gui.bgColor)
+	gui.surface.FillBg(gui.bgColor)
+	p0 := image.Point{0, 0}
+	surface.Erase(gui.surface.BgImage.Bounds(), p0)
 	text := []string{
 		"",
 		"",
@@ -42,22 +38,18 @@ func (gui *GUI) Setup(surface *Surface, modeline *groovymister.Modeline) {
 		"Donec semper urna eu efficitur facilisis.",
 		"Ut rhoncus interdum quam quis malesuada.",
 	}
-	gui.fontImage = DrawText(text)
 	gui.psImage = PowerstoneImg
-	gui.OnTick(0, 0.0)
+	draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), *gui.psImage, p0, draw.Over)
+	gui.fontImage = DrawText(text, gui.surface.Image.Bounds(), image.Transparent)
+	draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), gui.fontImage, p0, draw.Over)
+	//surface.Erase(gui.surface.BgImage.Bounds(), p0)
 }
 
 func (gui *GUI) OnTick(frameCount uint32, delta float64) {
-	gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
-	gui.surface.DrawImage(gui.psImage, gui.psImage.Bounds(), image.Point{0, 0}, draw.Over)
-	gui.surface.DrawImage(gui.psImage, gui.psImage.Bounds(), image.Point{0, 0}, draw.Over)
-	gui.surface.DrawImage(gui.psImage, gui.psImage.Bounds(), image.Point{0, 0}, draw.Over)
-	gui.surface.DrawImage(gui.fontImage, gui.fontImage.Bounds(), image.Point{0, 0}, draw.Over)
-
 	fpsInt := math.Floor(1 / delta)
-	fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)})
-	gui.surface.DrawImage(fpsImg, fpsImg.Bounds(), image.Point{0, 0}, draw.Over)
-
+	fmt.Printf("%v fps", fpsInt)
+	fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)}, image.Rect(0, 0, 40, 30), image.White)
+	draw.Draw(gui.surface.Image, fpsImg.Bounds(), fpsImg, image.Point{0, 0}, draw.Src)
 }
 
 func (gui *GUI) TearDown() {
