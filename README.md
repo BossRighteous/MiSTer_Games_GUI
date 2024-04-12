@@ -1,10 +1,5 @@
 ### Notice
-Currently migrating to Go for the rest of dev
-
-After some initial work in python, I found the runtime too slow to be usable.
-
-`src` is python, will be deleted when Go is working better
-`pkg/cmd` are go paths
+This is currently under active development. This is Babby's First Go project so feel free to recommend changes. Channel structures are still a bit wonky I think.
 
 # MiSTer_Games_GUI
 Low-resolution analog friendly MiSTer script GUI for your game library.
@@ -39,6 +34,8 @@ I am definitely be a bit behind on versions too!
 - GroovyMister API basic implementation
 - Image/TTF-font embeds and rendering w/ transparency
 - FPS display
+- Basic goroutine/channel support for lazy-loads against blit cycle
+- Loading meta JSON from disk into overlay Images
 
 ## Go Roadmap
 - Update for latest Groovy core packet support
@@ -52,31 +49,3 @@ I am definitely be a bit behind on versions too!
 - Configurable ini settings
 - Alternate or adaptive GUI for 480p vs 240p
 - Scaper to SQLite routine (maybe wizzo mrext)
-
-
-# Old Python install directions
-- ssh to MiSTer
-- `cd /media/fat/Scripts/`
-- `mkdir MiSTer_Games_GUI`
-- (On other computer)
-- clone repo
-- cd `{REPO}/src`
-- `rsync -r ./ root@{MISTER_HOST}:/media/fat/Scripts/MiSTer_Games_GUI`
-- (Back on MiSTer ssh shell)
-- `cd /media/fat/Scripts/MiSTer_Games_GUI/`
-- `python3 mister_game_gui.py`
-
-## Old Python Supported Features
-- Executable on MiSTer via SSH
-- UDP connection to GroovyMiSTer via localhost loopback
-- 256x240p@60hz default resolution rendering
-- Blit Loop up to 60hz
-- Rectangle Bitmap region composite and buffer manipulation
-- Image loading from data_utils DAT creation
-- Bitmap Font loading from data_utils DAT creation
-- FontSheet with trimmable text box rendering
-- SpriteSheet cell based blitting minimally working
-- "Themes" abstract with hooks for rendering
-- Idle frame queues for cross-frame work or deferred blit sequencing
-- Joystick input support
-- 24fps stable with unoptimized Joystick and fps output
