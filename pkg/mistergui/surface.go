@@ -1,7 +1,6 @@
 package mistergui
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -39,7 +38,7 @@ func (surface *Surface) Erase(rect image.Rectangle, sp image.Point) {
 }
 
 func (surface *Surface) BGRbytes(oddField bool) []byte {
-	fmt.Println(len(surface.Image.Pix))
+	//fmt.Println(len(surface.Image.Pix))
 	return surface.Image.Pix
 }
 

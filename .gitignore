@@ -2,3 +2,5 @@ __pycache__/
 *.py[cod]
 dev_commands.txt
 .rsync/
+games/
+cmd/scratch/

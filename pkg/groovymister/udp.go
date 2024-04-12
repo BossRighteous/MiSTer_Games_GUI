@@ -9,19 +9,18 @@ import (
 )
 
 const (
-	//mtuBlockSize int32 = 1470 // Build PC
-	mtuBlockSize       int32 = 65500 //mister local //
-	cmdHeaderClose     byte  = 1
-	cmdHeaderInit      byte  = 2
-	cmdHeaderSwitchRes byte  = 3
-	cmdHeaderBlit      byte  = 6
+	cmdHeaderClose     byte = 1
+	cmdHeaderInit      byte = 2
+	cmdHeaderSwitchRes byte = 3
+	cmdHeaderBlit      byte = 6
 )
 
 type UdpClient struct {
-	host  string
-	conn  net.PacketConn
-	addr  *net.UDPAddr
-	frame uint32
+	host         string
+	conn         net.PacketConn
+	addr         *net.UDPAddr
+	frame        uint32
+	mtuBlockSize int32
 }
 
 func (client *UdpClient) SendPacket(buffer []byte) {
@@ -34,7 +33,7 @@ func (client *UdpClient) SendPacket(buffer []byte) {
 
 func (client *UdpClient) SendMTU(buffer []byte) {
 	bytesToSend := int32(len(buffer))
-	chunkMaxSize := int32(mtuBlockSize)
+	chunkMaxSize := int32(client.mtuBlockSize)
 	var chunkSize int32 = 0
 	var offset int32 = 0
 	for bytesToSend > 0 {
@@ -75,7 +74,10 @@ func (client *UdpClient) CmdSwitchres(modeline *Modeline) {
 	binary.LittleEndian.PutUint16(buffer[19:21], modeline.VBegin)
 	binary.LittleEndian.PutUint16(buffer[21:23], modeline.VEnd)
 	binary.LittleEndian.PutUint16(buffer[23:25], modeline.VTotal)
-	buffer[25] = modeline.Interlace
+	buffer[25] = 0
+	if modeline.Interlace {
+		buffer[25] = 1
+	}
 	client.SendPacket(buffer)
 }
 
@@ -93,18 +95,28 @@ func (client *UdpClient) CmdBlit(frameBuffer []byte) {
 	fmt.Println("blit took", time.Since(start))
 }
 
-func (client *UdpClient) PollInput() []byte {
-	buf := make([]byte, 9)
-	rlen, _, err := client.conn.ReadFrom(buf)
-	if err != nil {
-		fmt.Println(err)
-	}
-	input := buf[0:rlen]
-	fmt.Println("input packet:", buf[0:rlen])
-	return input
+func (client *UdpClient) PollInput() (chan []byte, chan bool) {
+	inputChan := make(chan []byte, 10)
+	inputQuitChan := make(chan bool, 1)
+	go func() {
+		for {
+			select {
+			case <-inputQuitChan:
+				return
+			default:
+				buf := make([]byte, 9)
+				rlen, _, err := client.conn.ReadFrom(buf)
+				if err != nil {
+					fmt.Println(err)
+				}
+				inputChan <- buf[0:rlen]
+			}
+		}
+	}()
+	return inputChan, inputQuitChan
 }
 
-func NewUdpClient(host string) UdpClient {
+func NewUdpClient(host string, mtuBlockSize int32) UdpClient {
 	var client UdpClient
 	client.host = host
 	conn, err := net.ListenPacket("udp4", ":32101")
@@ -117,5 +129,6 @@ func NewUdpClient(host string) UdpClient {
 	}
 	client.conn = conn
 	client.addr = addr
+	client.mtuBlockSize = mtuBlockSize
 	return client
 }

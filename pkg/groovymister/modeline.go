@@ -15,8 +15,8 @@ type Modeline struct {
 	VBegin     uint16
 	VEnd       uint16
 	VTotal     uint16
-	Interlace  byte
 	FrameRate  float64
+	Interlace  bool
 }
 
 func safeInt16(intstr string) uint16 {
@@ -35,8 +35,8 @@ func safeFloat64(floatstr string) float64 {
 	return v
 }
 
-func ModelineFromString(modestr string) *Modeline {
-	parts := strings.Fields(modestr)
+func ModelineFromSettings(modeline string, frameRate float64, interlace bool) *Modeline {
+	parts := strings.Fields(modeline)
 	if len(parts) < 9 {
 		panic("unable to parse modeline")
 	}
@@ -50,7 +50,7 @@ func ModelineFromString(modestr string) *Modeline {
 		VBegin:     safeInt16(parts[6]),
 		VEnd:       safeInt16(parts[7]),
 		VTotal:     safeInt16(parts[8]),
-		Interlace:  0,
-		FrameRate:  60,
+		FrameRate:  frameRate,
+		Interlace:  interlace,
 	}
 }
