@@ -37,8 +37,8 @@ func (surface *Surface) Erase(rect image.Rectangle, sp image.Point) {
 	draw.Draw(surface.Image, rect, surface.BgImage, sp, draw.Src)
 }
 
-func (surface *Surface) BGRbytes(oddField bool) []byte {
-	//fmt.Println(len(surface.Image.Pix))
+func (surface *Surface) BGRbytes(_ bool) []byte {
+	//fmt.Println(surface.Image.Pix[3000:3100])
 	return surface.Image.Pix
 }
 

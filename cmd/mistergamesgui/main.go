@@ -18,6 +18,7 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	var frameBuffer []uint8
+	gInput := groovymister.GroovyInput{}
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -31,18 +32,13 @@ func main() {
 	udpClient := groovymister.NewUdpClient(settings.MiSTerHost, int32(settings.UdpMtuSize))
 
 	udpClient.CmdInit()
-	timer := time.NewTimer(100 * time.Millisecond)
-	<-timer.C
 	udpClient.CmdSwitchres(modeline)
-	timer = time.NewTimer(100 * time.Millisecond)
-	<-timer.C
-	//inputChan, inputQuitChan := udpClient.PollInput()
+	inputChan, inputQuitChan := udpClient.PollInput()
 
 	last := time.Now()
 	var tickDuration int64 = int64(1000000000 / modeline.FrameRate)
 	ticker := time.NewTicker(time.Duration(tickDuration))
 
-	isBlitting := false
 	frameCount := uint32(0)
 	gui := mistergui.NewGUI()
 	gui.Setup(modeline)
@@ -57,26 +53,24 @@ func main() {
 		case <-signalChan:
 			quitChan <- true
 		case <-quitChan:
-			//inputQuitChan <- true
+			inputQuitChan <- true
 			ticker.Stop()
 			isRunning = false
+		case gInput := <-inputChan:
+			fmt.Println("Inputs", gInput)
 		case frameBuffer = <-gui.FrameBufferChan:
 			fmt.Println("buffer event recv")
 			//update frame buffer from gui event
 		case tick := <-ticker.C:
 			frameCount++
-			if isBlitting {
-				continue
-			}
-			isBlitting = true
 			elapsed := tick.Sub(last)
 			last = tick
 			udpClient.CmdBlit(frameBuffer)
-			isBlitting = false
 
 			gui.TickChan <- mistergui.TickData{
 				FrameCount: frameCount,
 				Delta:      elapsed.Seconds(),
+				Input:      gInput,
 			}
 			fmt.Println(elapsed.Seconds())
 		}

@@ -32,6 +32,7 @@ const (
 type TickData struct {
 	FrameCount uint32
 	Delta      float64
+	Input      groovymister.GroovyInput
 }
 
 type GUI struct {

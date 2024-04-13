@@ -32,7 +32,9 @@ func (client *UdpClient) SendPacket(buffer []byte) {
 }
 
 func (client *UdpClient) SendMTU(buffer []byte) {
+	//fmt.Println(buffer[3000:3100])
 	bytesToSend := int32(len(buffer))
+	//fmt.Println(bytesToSend, client.mtuBlockSize)
 	chunkMaxSize := int32(client.mtuBlockSize)
 	var chunkSize int32 = 0
 	var offset int32 = 0
@@ -54,11 +56,12 @@ func (client *UdpClient) CmdClose() {
 }
 
 func (client *UdpClient) CmdInit() {
-	buffer := make([]byte, 4)
+	buffer := make([]byte, 5)
 	buffer[0] = cmdHeaderInit
 	buffer[1] = 0 // lz4 compression flag
 	buffer[2] = 0 // sound rate
 	buffer[3] = 0 // sound channel
+	buffer[4] = 0 // rgb mode
 	client.SendPacket(buffer)
 }
 
@@ -83,22 +86,23 @@ func (client *UdpClient) CmdSwitchres(modeline *Modeline) {
 
 func (client *UdpClient) CmdBlit(frameBuffer []byte) {
 	client.frame++
-	buffer := make([]byte, 9)
+	buffer := make([]byte, 7)
 	buffer[0] = cmdHeaderBlit
 	binary.LittleEndian.PutUint32(buffer[1:5], client.frame)
 	binary.LittleEndian.PutUint16(buffer[5:7], 0) // vsyncAuto
-	buffer[7] = 0                                 // lz4 blockSize & 0xff
-	buffer[8] = 0                                 // lz4 blockSize >> 8
+	//buffer[7] = 0                                 // lz4 blockSize & 0xff
+	//buffer[8] = 0                                 // lz4 blockSize >> 8
 	client.SendPacket(buffer)
 	start := time.Now()
 	client.SendMTU(frameBuffer)
 	fmt.Println("blit took", time.Since(start))
 }
 
-func (client *UdpClient) PollInput() (chan []byte, chan bool) {
-	inputChan := make(chan []byte, 10)
+func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
+	inputChan := make(chan GroovyInput, 20)
 	inputQuitChan := make(chan bool, 1)
 	go func() {
+		gInput := GroovyInput{}
 		for {
 			select {
 			case <-inputQuitChan:
@@ -109,7 +113,14 @@ func (client *UdpClient) PollInput() (chan []byte, chan bool) {
 				if err != nil {
 					fmt.Println(err)
 				}
-				inputChan <- buf[0:rlen]
+				if rlen == 9 {
+					print(buf)
+					nInput := InputFromBuffer(buf)
+					if nInput.JoyFrame > gInput.JoyFrame || (nInput.JoyFrame == gInput.JoyFrame && nInput.JoyOrder > gInput.JoyOrder) {
+						gInput = nInput
+						inputChan <- nInput
+					}
+				}
 			}
 		}
 	}()

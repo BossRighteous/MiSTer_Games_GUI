@@ -8,7 +8,7 @@ Will run on MiSTer ARM chip, using Groovy Mister core for headless graphics proc
 
 Will include utilities for data processing from scrapper API(s)? 
 
-# Go install direction
+# WIP Install direction (unstable at the moment)
 - mister ssh
 - cd /media/fat/Scripts
 - wget https://github.com/BossRighteous/MiSTer_Games_GUI/blob/main/_bin/linux_arm/mistergamesgui
@@ -25,17 +25,17 @@ Will include utilities for data processing from scrapper API(s)?
 
 ## MiSTer Requirements
 The GUI requires the (currently dev) GroovyMiSTer core for meaningful operation.
-
-I am definitely be a bit behind on versions too!
+Developing against build Groovy_20240327.rbf
 
 ## Go Supported Features
 - UDP connection to GroovyMiSTer via localhost loopback
-- Modeline parsing (hardcoded)
+- INI settings for modeline etc
 - GroovyMister API basic implementation
 - Image/TTF-font embeds and rendering w/ transparency
 - FPS display
 - Basic goroutine/channel support for lazy-loads against blit cycle
 - Loading meta JSON from disk into overlay Images
+- Almost have input support working
 
 ## Go Roadmap
 - Update for latest Groovy core packet support
