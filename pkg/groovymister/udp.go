@@ -19,6 +19,8 @@ type UdpClient struct {
 	host         string
 	conn         net.PacketConn
 	addr         *net.UDPAddr
+	iConn        net.PacketConn
+	iAddr        *net.UDPAddr
 	frame        uint32
 	mtuBlockSize int32
 }
@@ -108,10 +110,13 @@ func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
 			case <-inputQuitChan:
 				return
 			default:
+				fmt.Println("listening for input")
 				buf := make([]byte, 9)
-				rlen, _, err := client.conn.ReadFrom(buf)
+				rlen, _, err := client.iConn.ReadFrom(buf) // Not working for INPUT
+				//rlen, _, err := client.conn.ReadFrom(buf) works for ACK
+				fmt.Println("INPUT READ", rlen)
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("INPUT READ ERROR", err)
 				}
 				if rlen == 9 {
 					print(buf)
@@ -130,7 +135,7 @@ func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
 func NewUdpClient(host string, mtuBlockSize int32) UdpClient {
 	var client UdpClient
 	client.host = host
-	conn, err := net.ListenPacket("udp4", ":32101")
+	conn, err := net.ListenPacket("udp4", ":32100")
 	if err != nil {
 		panic(err)
 	}
@@ -138,8 +143,21 @@ func NewUdpClient(host string, mtuBlockSize int32) UdpClient {
 	if err != nil {
 		panic(err)
 	}
+	iConn, err := net.ListenPacket("udp4", ":32101")
+	if err != nil {
+		panic(err)
+	}
+	iAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:32101", host))
+	if err != nil {
+		panic(err)
+	}
+	// send empty?
+	_, _ = iConn.WriteTo(make([]byte, 1), iAddr)
+
 	client.conn = conn
 	client.addr = addr
+	client.iConn = iConn
+	client.iAddr = iAddr
 	client.mtuBlockSize = mtuBlockSize
 	return client
 }
