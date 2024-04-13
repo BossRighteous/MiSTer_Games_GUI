@@ -59,7 +59,7 @@ func main() {
 		case gInput := <-inputChan:
 			fmt.Println("Inputs", gInput)
 		case frameBuffer = <-gui.FrameBufferChan:
-			fmt.Println("buffer event recv")
+			//fmt.Println("buffer event recv")
 			//update frame buffer from gui event
 		case tick := <-ticker.C:
 			frameCount++
@@ -72,7 +72,7 @@ func main() {
 				Delta:      elapsed.Seconds(),
 				Input:      gInput,
 			}
-			fmt.Println(elapsed.Seconds())
+			//fmt.Println(elapsed.Seconds())
 		}
 
 	}

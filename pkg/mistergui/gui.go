@@ -103,7 +103,7 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 func (gui *GUI) OnTick(frameCount uint32, delta float64) {
 	gui.redraw = true
 	fpsInt := math.Floor(1 / delta)
-	fmt.Printf("%v fps", fpsInt)
+	//fmt.Printf("%v fps", fpsInt)
 	fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)}, image.Rect(0, 0, 40, 30), image.White)
 	draw.Draw(gui.surface.Image, fpsImg.Bounds(), fpsImg, P0, draw.Src)
 

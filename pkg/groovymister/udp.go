@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"time"
 )
 
 const (
@@ -55,6 +54,7 @@ func (client *UdpClient) CmdClose() {
 	buffer := make([]byte, 1)
 	buffer[0] = cmdHeaderClose
 	client.SendPacket(buffer)
+	client.Close()
 }
 
 func (client *UdpClient) CmdInit() {
@@ -95,9 +95,14 @@ func (client *UdpClient) CmdBlit(frameBuffer []byte) {
 	//buffer[7] = 0                                 // lz4 blockSize & 0xff
 	//buffer[8] = 0                                 // lz4 blockSize >> 8
 	client.SendPacket(buffer)
-	start := time.Now()
+	//start := time.Now()
 	client.SendMTU(frameBuffer)
-	fmt.Println("blit took", time.Since(start))
+	//fmt.Println("blit took", time.Since(start))
+}
+
+func (client *UdpClient) Close() {
+	client.conn.Close()
+	client.iConn.Close()
 }
 
 func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
@@ -111,16 +116,14 @@ func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
 				return
 			default:
 				fmt.Println("listening for input")
-				buf := make([]byte, 9)
-				rlen, _, err := client.iConn.ReadFrom(buf) // Not working for INPUT
-				//rlen, _, err := client.conn.ReadFrom(buf) works for ACK
-				fmt.Println("INPUT READ", rlen)
+				buf := make([]byte, 1024)
+				rlen, _, err := client.iConn.ReadFrom(buf)
+				fmt.Println("UDP READ", rlen)
 				if err != nil {
-					fmt.Println("INPUT READ ERROR", err)
+					fmt.Println("UDP READ ERROR", err)
 				}
 				if rlen == 9 {
-					print(buf)
-					nInput := InputFromBuffer(buf)
+					nInput := InputFromBuffer(buf[:rlen])
 					if nInput.JoyFrame > gInput.JoyFrame || (nInput.JoyFrame == gInput.JoyFrame && nInput.JoyOrder > gInput.JoyOrder) {
 						gInput = nInput
 						inputChan <- nInput

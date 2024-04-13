@@ -4,9 +4,16 @@ This is currently under active development. This is Babby's First Go project so 
 # MiSTer_Games_GUI
 Low-resolution analog friendly MiSTer script GUI for your game library.
 
+Aiming for something like EmulationStation with filesystem browsing paired to Meta data and images.
+
 Will run on MiSTer ARM chip, using Groovy Mister core for headless graphics processing.
 
 Will include utilities for data processing from scrapper API(s)? 
+
+# WIP local dev direction
+- clone repo
+- cd {repo_path}
+- go run cmd/mistergamesgui/main.go
 
 # WIP Install direction (unstable at the moment)
 - mister ssh
@@ -35,7 +42,7 @@ Developing against build Groovy_20240327.rbf
 - FPS display
 - Basic goroutine/channel support for lazy-loads against blit cycle
 - Loading meta JSON from disk into overlay Images
-- Almost have input support working
+- Input support for 2 9 Button digital controllers
 
 ## Go Roadmap
 - Directory navigation
