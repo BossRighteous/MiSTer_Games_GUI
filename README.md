@@ -38,14 +38,11 @@ Developing against build Groovy_20240327.rbf
 - Almost have input support working
 
 ## Go Roadmap
-- Update for latest Groovy core packet support
-- Controller input handling support (wizzo mrext or groovymister udp?)
 - Directory navigation
 - MGL temp writes for Core/Game loading
 - Display meta-data for selected game
 - Display image(s) for selected game
-- LZ4 compression for GroovyMister API
 - Interlace support
-- Configurable ini settings
 - Alternate or adaptive GUI for 480p vs 240p
-- Scaper to SQLite routine (maybe wizzo mrext)
+- Scaper to Meta routine
+- Meta dumps offloaded to static hosting to avoid scraping needs
