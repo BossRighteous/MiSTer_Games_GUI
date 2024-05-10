@@ -105,11 +105,11 @@ func (client *UdpClient) Close() {
 	client.iConn.Close()
 }
 
-func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
-	inputChan := make(chan GroovyInput, 20)
+func (client *UdpClient) PollInput() (chan GroovyInputPacket, chan bool) {
+	inputChan := make(chan GroovyInputPacket, 20)
 	inputQuitChan := make(chan bool, 1)
 	go func() {
-		gInput := GroovyInput{}
+		prevPacket := GroovyInputPacket{}
 		for {
 			select {
 			case <-inputQuitChan:
@@ -123,10 +123,10 @@ func (client *UdpClient) PollInput() (chan GroovyInput, chan bool) {
 					fmt.Println("UDP READ ERROR", err)
 				}
 				if rlen == 9 {
-					nInput := InputFromBuffer(buf[:rlen])
-					if nInput.JoyFrame > gInput.JoyFrame || (nInput.JoyFrame == gInput.JoyFrame && nInput.JoyOrder > gInput.JoyOrder) {
-						gInput = nInput
-						inputChan <- nInput
+					newPacket := InputPacketFromBuffer(buf[:rlen])
+					if newPacket.JoyFrame > prevPacket.JoyFrame || (newPacket.JoyFrame == prevPacket.JoyFrame && newPacket.JoyOrder > prevPacket.JoyOrder) {
+						prevPacket = newPacket
+						inputChan <- newPacket
 					}
 				}
 			}

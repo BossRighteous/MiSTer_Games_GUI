@@ -17,7 +17,7 @@ func parseFont(fontBytes []byte) *truetype.Font {
 	return font
 }
 
-var Roboto *truetype.Font = parseFont(*Embeds.RobotoBold)
+var PtSansRegular *truetype.Font = parseFont(*Embeds.PtSansRegular)
 
 func DrawText(text []string, rect image.Rectangle, bg *image.Uniform) *image.NRGBA {
 	var (
@@ -25,7 +25,7 @@ func DrawText(text []string, rect image.Rectangle, bg *image.Uniform) *image.NRG
 		hinting string         = "full"
 		size    float64        = 12
 		spacing float64        = 1.5
-		ttfont  *truetype.Font = Roboto
+		ttfont  *truetype.Font = PtSansRegular
 	)
 
 	fg := image.Black

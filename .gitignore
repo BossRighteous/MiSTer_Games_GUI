@@ -4,3 +4,4 @@ dev_commands.txt
 .rsync/
 games/
 cmd/scratch/
+pkg/mistergui/embed

@@ -17,4 +17,4 @@ func DecodeImageBytes(imageBytes *[]byte) *image.Image {
 	return &img
 }
 
-var PowerstoneImg = DecodeImageBytes(Embeds.Powerstone)
+//var ListingBg = DecodeImageBytes(Embeds.ListingBg)

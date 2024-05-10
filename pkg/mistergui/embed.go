@@ -2,28 +2,35 @@ package mistergui
 
 import _ "embed"
 
-//go:embed embed/Roboto-Regular.ttf
-var robotoRegular []byte
+//go:embed embed/PTSans-Regular.ttf
+var ptSansRegular []byte
 
-//go:embed embed/Roboto-Bold.ttf
-var robotoBold []byte
+/*
+//go:embed embed/confirm-bg.png
+var confirmBg []byte
 
-//go:embed embed/Roboto-Black.ttf
-var robotoBlack []byte
+//go:embed embed/images-bg.png
+var imagesBg []byte
 
-//go:embed embed/powerstone.png
-var powerstone []byte
+//go:embed embed/info-bg.png
+var infoBg []byte
+
+//go:embed embed/listing-bg.png
+var listingBg []byte
+*/
 
 type EmbededData struct {
-	RobotoRegular *[]byte
-	RobotoBold    *[]byte
-	RobotoBlack   *[]byte
-	Powerstone    *[]byte
+	PtSansRegular *[]byte
+	//ConfirmBg     *[]byte
+	//ImagesBg      *[]byte
+	//InfoBg        *[]byte
+	//ListingBg     *[]byte
 }
 
 var Embeds *EmbededData = &EmbededData{
-	RobotoRegular: &robotoRegular,
-	RobotoBold:    &robotoBold,
-	RobotoBlack:   &robotoBlack,
-	Powerstone:    &powerstone,
+	PtSansRegular: &ptSansRegular,
+	//ConfirmBg:     &confirmBg,
+	//ImagesBg:      &imagesBg,
+	//InfoBg:        &infoBg,
+	//ListingBg:     &listingBg,
 }

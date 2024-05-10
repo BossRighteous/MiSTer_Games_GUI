@@ -18,7 +18,7 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	var frameBuffer []uint8
-	gInput := groovymister.GroovyInput{}
+	gInputPacket := groovymister.GroovyInputPacket{}
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -56,8 +56,8 @@ func main() {
 			inputQuitChan <- true
 			ticker.Stop()
 			isRunning = false
-		case gInput := <-inputChan:
-			fmt.Println("Inputs", gInput)
+		case gInputPacket := <-inputChan:
+			fmt.Println("Inputs", gInputPacket)
 		case frameBuffer = <-gui.FrameBufferChan:
 			//fmt.Println("buffer event recv")
 			//update frame buffer from gui event
@@ -68,9 +68,9 @@ func main() {
 			udpClient.CmdBlit(frameBuffer)
 
 			gui.TickChan <- mistergui.TickData{
-				FrameCount: frameCount,
-				Delta:      elapsed.Seconds(),
-				Input:      gInput,
+				FrameCount:  frameCount,
+				Delta:       elapsed.Seconds(),
+				InputPacket: gInputPacket,
 			}
 			//fmt.Println(elapsed.Seconds())
 		}

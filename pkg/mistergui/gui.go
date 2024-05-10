@@ -3,47 +3,49 @@ package mistergui
 import (
 	"fmt"
 	"image"
-	"image/draw"
-	"math"
 	"math/rand"
-	"time"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
-)
-
-type State uint8
-
-const (
-	StateInit State = iota
-	StateWaiting
-	StateWorking
-	StateGameLoading
-)
-
-type Screen uint8
-
-const (
-	ScreenCores Screen = iota
-	ScreenGameListing
-	ScreenGameScreenshot
-	ScreenGameMeta
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mister"
 )
 
 type TickData struct {
-	FrameCount uint32
-	Delta      float64
-	Input      groovymister.GroovyInput
+	FrameCount  uint32
+	Delta       float64
+	InputPacket groovymister.GroovyInputPacket
+}
+
+// mgdb version later
+type Game struct {
+	Name string
+	Path string
+}
+
+type GUIState struct {
+	Screen    Screen
+	Screens   *Screens
+	IsChanged bool
+	IsInputOn bool
+	IsLoading bool
+	Core      *mister.Core
+	Cores     *[]mister.Core
+	Game      *Game
+	AsyncChan chan AsyncCallback
+	Surface   *Surface
+	Input     *groovymister.GroovyInput
+	Modeline  *groovymister.Modeline
+}
+
+func (state *GUIState) ChangeScreen(newScreen Screen) {
+	if state.Screen != nil {
+		state.Screen.OnExit()
+	}
+	state.Screen = newScreen
+	state.Screen.OnEnter()
 }
 
 type GUI struct {
-	bgColor   ColorBGR8
-	surface   *Surface
-	modeline  *groovymister.Modeline
-	fontImage *image.NRGBA
-	psImage   *image.Image
-	state     State
-	screen    Screen
-	redraw    bool
+	State *GUIState
 
 	TickChan chan TickData
 	QuitChan chan bool
@@ -59,32 +61,40 @@ var P0 image.Point = image.Point{0, 0}
 func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 	fmt.Println("setting up GUI")
 
-	gui.surface = NewSurface(modeline.HActive, modeline.VActive, modeline.Interlace)
-	gui.modeline = modeline
-	gui.bgColor = ColorBGR8{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255))}
-	fmt.Println(gui.bgColor)
-	gui.surface.FillBg(gui.bgColor)
+	surface := NewSurface(modeline.HActive, modeline.VActive, modeline.Interlace)
+	bgColor := ColorBGR8{uint8(rand.Intn(13)), uint8(rand.Intn(66)), uint8(rand.Intn(104))}
+	surface.FillBg(bgColor)
 	p0 := image.Point{0, 0}
-	gui.surface.Erase(gui.surface.BgImage.Bounds(), p0)
-	/*text := []string{
-		"",
-		"",
-		"Integer sed est consequat augue scelerisque mollis in at est.",
-		"Nam nec augue facilisis, accumsan turpis vitae, elementum quam.",
-		"Nullam volutpat maximus ex posuere euismod.",
-		"Vivamus nulla nulla, varius ac augue et, vehicula sollicitudin lectus.",
-		"Curabitur vel est quis velit mattis sodales.",
-		"Donec semper urna eu efficitur facilisis.",
-		"Ut rhoncus interdum quam quis malesuada.",
-	}*/
-	gui.psImage = PowerstoneImg
-	draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), *gui.psImage, p0, draw.Over)
+	surface.Erase(surface.BgImage.Bounds(), p0)
+
+	cores := mister.GetCoresFromJSON()
+
+	gui.State = &GUIState{
+		Screen: nil,
+		Screens: &Screens{
+			Cores: &ScreenCores{},
+		},
+		IsChanged: false,
+		IsInputOn: true,
+		Core:      nil,
+		Cores:     &cores,
+		Game:      nil,
+		AsyncChan: gui.AsyncCallbackChan,
+		Surface:   surface,
+		Input:     &groovymister.GroovyInput{},
+		Modeline:  modeline,
+	}
+
+	gui.State.Screens.Cores.Setup(gui.State)
+
+	gui.State.ChangeScreen(gui.State.Screens.Cores)
+
+	//gui.psImage = ListingBg
+	//draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), *gui.psImage, p0, draw.Over)
 	//gui.fontImage = DrawText(text, gui.surface.Image.Bounds(), image.Transparent)
 	//draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), gui.fontImage, p0, draw.Over)
 	//surface.Erase(gui.surface.BgImage.Bounds(), p0)
-	gui.FrameBufferChan <- gui.surface.BGRbytes(true)
-
-	go func() {
+	/*go func() {
 		timer := time.NewTimer(1 * time.Second)
 		<-timer.C
 		metaImages := LoadMetaImages(
@@ -97,24 +107,34 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 				draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), &metaImages[0], p0, draw.Over)
 			}
 		}
-	}()
+	}()*/
+
+	gui.FrameBufferChan <- gui.State.Surface.BGRbytes(true)
 }
 
-func (gui *GUI) OnTick(frameCount uint32, delta float64) {
-	gui.redraw = true
-	fpsInt := math.Floor(1 / delta)
+func (gui *GUI) OnTick(tick TickData) {
+	//gui.redraw = true
+	//fpsInt := math.Floor(1 / tick.Delta)
 	//fmt.Printf("%v fps", fpsInt)
-	fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)}, image.Rect(0, 0, 40, 30), image.White)
-	draw.Draw(gui.surface.Image, fpsImg.Bounds(), fpsImg, P0, draw.Src)
+	//fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)}, image.Rect(0, 0, 40, 30), image.White)
+	//draw.Draw(gui.surface.Image, fpsImg.Bounds(), fpsImg, P0, draw.Src)
 
-	if gui.redraw {
-		gui.redraw = false
-		gui.FrameBufferChan <- gui.surface.BGRbytes(true)
+	// Observe inputs
+	gui.State.Input.AddInputPacket(tick.InputPacket)
+
+	gui.State.Screen.OnTick(tick)
+
+	if gui.State.IsChanged {
+		gui.State.Screen.Render()
+		gui.FrameBufferChan <- gui.State.Surface.BGRbytes(true)
+		gui.State.IsChanged = false
 	}
 }
 
 func (gui *GUI) TearDown() {
-	//gui.surface.Fill(gui.bgColor.b, gui.bgColor.g, gui.bgColor.r)
+	if gui.State.Screen != nil {
+		gui.State.Screen.TearDown()
+	}
 }
 
 func listen(gui *GUI) {
@@ -124,9 +144,9 @@ func listen(gui *GUI) {
 			fmt.Println("gui.quitChan recv, closing goroutine")
 			return
 		case tickData := <-gui.TickChan:
-			gui.OnTick(tickData.FrameCount, tickData.Delta)
+			gui.OnTick(tickData)
 		case promiseFn := <-gui.AsyncCallbackChan:
-			gui.redraw = true
+			gui.State.IsChanged = true
 			promiseFn(gui)
 		}
 	}
@@ -143,4 +163,5 @@ func NewGUI() *GUI {
 	gui.FrameBufferChan = make(chan []uint8, 1)
 	go listen(gui)
 	return gui
+
 }

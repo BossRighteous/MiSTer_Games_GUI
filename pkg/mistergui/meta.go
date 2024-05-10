@@ -48,7 +48,7 @@ func parseMetaImages(meta Meta, rect image.Rectangle) []image.NRGBA {
 	images := make([]image.NRGBA, 0)
 	// These are gueses for now
 	charsPerLine := int(math.Floor(float64(rect.Dx()) / 7.0))
-	linesPerImage := int(math.Floor(float64(rect.Dy()) / 12.0))
+	linesPerImage := int(math.Floor(float64(rect.Dy()) / 20.0))
 
 	textLines := make([]string, 1)
 	textLines[0] = fmt.Sprintf("Name: %s", meta.Name)

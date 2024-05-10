@@ -2,50 +2,41 @@ package groovymister
 
 import "encoding/binary"
 
-/*
-memcpy(&inputs.joyFrame, &m_bufferInputsReceive[0], 4);
-memcpy(&inputs.joyOrder, &m_bufferInputsReceive[4], 1);
-memcpy(&inputs.joy1, &m_bufferInputsReceive[5], 2);
-memcpy(&inputs.joy2, &m_bufferInputsReceive[7], 2);
+const (
+	bitpos_Right uint16 = (1 << 0)
+	bitpos_Left  uint16 = (1 << 1)
+	bitpos_Down  uint16 = (1 << 2)
+	bitpos_Up    uint16 = (1 << 3)
+	bitpos_B1    uint16 = (1 << 4)
+	bitpos_B2    uint16 = (1 << 5)
+	bitpos_B3    uint16 = (1 << 6)
+	bitpos_B4    uint16 = (1 << 7)
+	bitpos_B5    uint16 = (1 << 8)
+	bitpos_B6    uint16 = (1 << 9)
+	bitpos_B7    uint16 = (1 << 10)
+	bitpos_B8    uint16 = (1 << 11)
+	bitpos_B9    uint16 = (1 << 12)
+)
 
-#define GM_JOY_RIGHT (1 << 0)
-#define GM_JOY_LEFT  (1 << 1)
-#define GM_JOY_DOWN  (1 << 2)
-#define GM_JOY_UP    (1 << 3)
-#define GM_JOY_B1    (1 << 4)
-#define GM_JOY_B2    (1 << 5)
-#define GM_JOY_B3    (1 << 6)
-#define GM_JOY_B4    (1 << 7)
-#define GM_JOY_B5    (1 << 8)
-#define GM_JOY_B6    (1 << 9)
-#define GM_JOY_B7    (1 << 10)
-#define GM_JOY_B8    (1 << 11)
-#define GM_JOY_B9    (1 << 12)
-*/
-
-type GroovyInput struct {
+type GroovyInputPacket struct {
 	JoyFrame uint32
 	JoyOrder uint8
 	Joy1Mask uint16 // bitmask
 	Joy2Mask uint16 // bitmask
-	Joy1     GroovyJoy
-	Joy2     GroovyJoy
+	//Joy1     GroovyJoy
+	//Joy2     GroovyJoy
 }
 
-func maskToBool(v uint16, pos uint16) bool {
-	return v&(1<<pos) != 0
-}
-
-func InputFromBuffer(buf []uint8) GroovyInput {
+func InputPacketFromBuffer(buf []uint8) GroovyInputPacket {
 	m1 := binary.LittleEndian.Uint16(buf[5:7])
 	m2 := binary.LittleEndian.Uint16(buf[7:9])
-	return GroovyInput{
+	return GroovyInputPacket{
 		JoyFrame: binary.LittleEndian.Uint32(buf[0:4]),
 		JoyOrder: buf[4],
 		Joy1Mask: m1,
 		Joy2Mask: m2,
-		Joy1:     GroovyJoyFromMask(m1),
-		Joy2:     GroovyJoyFromMask(m2),
+		//Joy1:     GroovyJoyFromMask(m1),
+		//Joy2:     GroovyJoyFromMask(m2),
 	}
 }
 
@@ -67,18 +58,103 @@ type GroovyJoy struct {
 
 func GroovyJoyFromMask(m uint16) GroovyJoy {
 	return GroovyJoy{
-		Right: maskToBool(m, 0),
-		Left:  maskToBool(m, 1),
-		Down:  maskToBool(m, 2),
-		Up:    maskToBool(m, 3),
-		B1:    maskToBool(m, 4),
-		B2:    maskToBool(m, 5),
-		B3:    maskToBool(m, 6),
-		B4:    maskToBool(m, 7),
-		B5:    maskToBool(m, 8),
-		B6:    maskToBool(m, 9),
-		B7:    maskToBool(m, 10),
-		B8:    maskToBool(m, 11),
-		B9:    maskToBool(m, 12),
+		Right: m&bitpos_Right != 0,
+		Left:  m&bitpos_Left != 0,
+		Down:  m&bitpos_Down != 0,
+		Up:    m&bitpos_Up != 0,
+		B1:    m&bitpos_B1 != 0,
+		B2:    m&bitpos_B2 != 0,
+		B3:    m&bitpos_B3 != 0,
+		B4:    m&bitpos_B4 != 0,
+		B5:    m&bitpos_B5 != 0,
+		B6:    m&bitpos_B6 != 0,
+		B7:    m&bitpos_B7 != 0,
+		B8:    m&bitpos_B8 != 0,
+		B9:    m&bitpos_B9 != 0,
 	}
+}
+
+type InputKey uint8
+
+const (
+	InputRight InputKey = iota
+	InputLeft
+	InputDown
+	InputUp
+	InputB1
+	InputB2
+	InputB3
+	InputB4
+	InputB5
+	InputB6
+	InputB7
+	InputB8
+	InputB9
+)
+
+func isJoyPressed(joy GroovyJoy, key InputKey) bool {
+	switch key {
+	case InputRight:
+		return joy.Right
+	case InputLeft:
+		return joy.Left
+	case InputDown:
+		return joy.Down
+	case InputUp:
+		return joy.Up
+	case InputB1:
+		return joy.B1
+	case InputB2:
+		return joy.B2
+	case InputB3:
+		return joy.B3
+	case InputB4:
+		return joy.B4
+	case InputB5:
+		return joy.B5
+	case InputB6:
+		return joy.B6
+	case InputB7:
+		return joy.B7
+	case InputB8:
+		return joy.B8
+	case InputB9:
+		return joy.B9
+	}
+	return false
+}
+
+type GroovyInput struct {
+	PrevJoy1 GroovyJoy
+	Joy1     GroovyJoy
+	PrevJoy2 GroovyJoy
+	Joy2     GroovyJoy
+}
+
+func (input *GroovyInput) AddInputPacket(packet GroovyInputPacket) {
+	input.PrevJoy1 = input.Joy1
+	input.Joy1 = GroovyJoyFromMask(packet.Joy1Mask)
+	input.PrevJoy2 = input.Joy2
+	input.Joy2 = GroovyJoyFromMask(packet.Joy2Mask)
+}
+
+func (input *GroovyInput) IsPressed(joyNum uint8, key InputKey) bool {
+	if joyNum == 2 {
+		return isJoyPressed(input.Joy2, key)
+	}
+	return isJoyPressed(input.Joy1, key)
+}
+
+func (input *GroovyInput) IsJustPressed(joyNum uint8, key InputKey) bool {
+	if joyNum == 2 {
+		return isJoyPressed(input.Joy2, key) && !isJoyPressed(input.PrevJoy2, key)
+	}
+	return isJoyPressed(input.Joy1, key) && !isJoyPressed(input.PrevJoy1, key)
+}
+
+func (input *GroovyInput) IsJustReleased(joyNum uint8, key InputKey) bool {
+	if joyNum == 2 {
+		return !isJoyPressed(input.Joy2, key) && isJoyPressed(input.PrevJoy2, key)
+	}
+	return !isJoyPressed(input.Joy1, key) && isJoyPressed(input.PrevJoy1, key)
 }
