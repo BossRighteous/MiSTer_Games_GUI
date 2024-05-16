@@ -3,7 +3,6 @@ package mistergui
 import (
 	"fmt"
 	"image"
-	"math/rand"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mister"
@@ -25,11 +24,11 @@ type GUIState struct {
 	Screen    Screen
 	Screens   *Screens
 	IsChanged bool
-	IsInputOn bool
 	IsLoading bool
 	Core      *mister.Core
 	Cores     *[]mister.Core
 	Game      *Game
+	Modal     *Modal
 	AsyncChan chan AsyncCallback
 	Surface   *Surface
 	Input     *groovymister.GroovyInput
@@ -62,7 +61,7 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 	fmt.Println("setting up GUI")
 
 	surface := NewSurface(modeline.HActive, modeline.VActive, modeline.Interlace)
-	bgColor := ColorBGR8{uint8(rand.Intn(13)), uint8(rand.Intn(66)), uint8(rand.Intn(104))}
+	bgColor := ColorBGR8{uint8(104), uint8(66), uint8(13)}
 	surface.FillBg(bgColor)
 	p0 := image.Point{0, 0}
 	surface.Erase(surface.BgImage.Bounds(), p0)
@@ -73,12 +72,14 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 		Screen: nil,
 		Screens: &Screens{
 			Cores: &ScreenCores{},
+			Games: &ScreenGames{},
+			Roms:  &ScreenRoms{},
 		},
 		IsChanged: false,
-		IsInputOn: true,
-		Core:      nil,
+		Core:      &cores[0],
 		Cores:     &cores,
 		Game:      nil,
+		Modal:     nil,
 		AsyncChan: gui.AsyncCallbackChan,
 		Surface:   surface,
 		Input:     &groovymister.GroovyInput{},
@@ -86,8 +87,10 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 	}
 
 	gui.State.Screens.Cores.Setup(gui.State)
+	gui.State.Screens.Games.Setup(gui.State)
+	gui.State.Screens.Roms.Setup(gui.State)
 
-	gui.State.ChangeScreen(gui.State.Screens.Cores)
+	gui.State.ChangeScreen(gui.State.Screens.Games)
 
 	//gui.psImage = ListingBg
 	//draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), *gui.psImage, p0, draw.Over)
@@ -121,6 +124,24 @@ func (gui *GUI) OnTick(tick TickData) {
 
 	// Observe inputs
 	gui.State.Input.AddInputPacket(tick.InputPacket)
+
+	if gui.State.Modal != nil {
+		modal := *gui.State.Modal
+		if gui.State.IsChanged {
+			modal.Render()
+		}
+
+		if gui.State.Input.IsJustPressed(1, groovymister.InputB1) {
+			modal.OnAccept()
+			gui.State.Modal = nil
+			return
+		} else if gui.State.Input.IsJustPressed(1, groovymister.InputB2) {
+			modal.OnReject()
+			gui.State.Modal = nil
+			return
+		}
+		return
+	}
 
 	gui.State.Screen.OnTick(tick)
 

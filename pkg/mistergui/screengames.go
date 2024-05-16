@@ -4,39 +4,51 @@ import (
 	"fmt"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mgdb"
 )
 
-type ScreenCores struct {
+type ScreenGames struct {
 	guiState *GUIState
 	list     *List
 }
 
-func (screen *ScreenCores) Setup(guiState *GUIState) {
+func (screen *ScreenGames) Setup(guiState *GUIState) {
 	screen.guiState = guiState
 
+	screen.list = NewList(8, screen.guiState, []ListItem{})
+}
+
+func (screen *ScreenGames) OnEnter() {
+	fmt.Println("screenCores OnEnter")
+
+	client, _ := mgdb.OpenMGDB("/mnt/c/Users/bossr/Code/MiSTer_Games_GUI/games/N64/_N64.mgdb")
+	fmt.Printf("%+v\n", client)
+	info, _ := client.GetMGDBInfo()
+	fmt.Printf("%+v\n", info)
+
+	list, _ := client.GetGameList()
+	fmt.Printf("%+v\n", list)
+
 	var items []ListItem
-	for i := 0; i < 1000; i++ {
+	for _, gameItem := range list {
 		item := &BasicListItem{
-			label: fmt.Sprintf("Item%v", i),
+			label: gameItem.Name,
 		}
 		item.selectCallback = func() {
 			fmt.Println("OnSelect item", item.Label())
 		}
 		items = append(items, item)
 	}
-	screen.list = NewList(8, screen.guiState, items)
-}
+	screen.list.ReplaceItems(items)
 
-func (screen *ScreenCores) OnEnter() {
-	fmt.Println("screenCores OnEnter")
 	screen.list.Render()
 }
 
-func (screen *ScreenCores) OnExit() {
+func (screen *ScreenGames) OnExit() {
 
 }
 
-func (screen *ScreenCores) OnTick(tick TickData) {
+func (screen *ScreenGames) OnTick(tick TickData) {
 
 	input := screen.guiState.Input
 	if input.IsJustPressed(1, groovymister.InputDown) {
@@ -47,6 +59,8 @@ func (screen *ScreenCores) OnTick(tick TickData) {
 		screen.list.NextPage()
 	} else if input.IsJustPressed(1, groovymister.InputLeft) {
 		screen.list.PreviousPage()
+	} else if input.IsJustPressed(1, groovymister.InputB1) {
+		screen.list.CurrentItem().OnSelect()
 	}
 	//fmt.Println("screenCores OnTick", tick.FrameCount)
 	//fmt.Println(screen.list.CurrentItem().Label())
@@ -55,11 +69,11 @@ func (screen *ScreenCores) OnTick(tick TickData) {
 	//screen.guiState.IsChanged = true
 }
 
-func (screen *ScreenCores) Render() {
+func (screen *ScreenGames) Render() {
 	//fmt.Println("screenCores Render")
 	screen.list.Render()
 }
 
-func (screen *ScreenCores) TearDown() {
+func (screen *ScreenGames) TearDown() {
 
 }

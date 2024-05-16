@@ -6,12 +6,12 @@ import (
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
 )
 
-type ScreenCores struct {
+type ScreenRoms struct {
 	guiState *GUIState
 	list     *List
 }
 
-func (screen *ScreenCores) Setup(guiState *GUIState) {
+func (screen *ScreenRoms) Setup(guiState *GUIState) {
 	screen.guiState = guiState
 
 	var items []ListItem
@@ -27,16 +27,16 @@ func (screen *ScreenCores) Setup(guiState *GUIState) {
 	screen.list = NewList(8, screen.guiState, items)
 }
 
-func (screen *ScreenCores) OnEnter() {
+func (screen *ScreenRoms) OnEnter() {
 	fmt.Println("screenCores OnEnter")
 	screen.list.Render()
 }
 
-func (screen *ScreenCores) OnExit() {
+func (screen *ScreenRoms) OnExit() {
 
 }
 
-func (screen *ScreenCores) OnTick(tick TickData) {
+func (screen *ScreenRoms) OnTick(tick TickData) {
 
 	input := screen.guiState.Input
 	if input.IsJustPressed(1, groovymister.InputDown) {
@@ -55,11 +55,11 @@ func (screen *ScreenCores) OnTick(tick TickData) {
 	//screen.guiState.IsChanged = true
 }
 
-func (screen *ScreenCores) Render() {
+func (screen *ScreenRoms) Render() {
 	//fmt.Println("screenCores Render")
 	screen.list.Render()
 }
 
-func (screen *ScreenCores) TearDown() {
+func (screen *ScreenRoms) TearDown() {
 
 }

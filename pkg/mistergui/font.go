@@ -28,7 +28,7 @@ func DrawText(text []string, rect image.Rectangle, bg *image.Uniform) *image.NRG
 		ttfont  *truetype.Font = PtSansRegular
 	)
 
-	fg := image.Black
+	fg := image.White
 	rgba := image.NewNRGBA(rect)
 	draw.Draw(rgba, rgba.Bounds(), bg, image.Point{0, 0}, draw.Src)
 	c := freetype.NewContext()

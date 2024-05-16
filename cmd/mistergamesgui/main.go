@@ -56,8 +56,8 @@ func main() {
 			inputQuitChan <- true
 			ticker.Stop()
 			isRunning = false
-		case gInputPacket := <-inputChan:
-			fmt.Println("Inputs", gInputPacket)
+		case gInputPacket = <-inputChan:
+			//fmt.Println("Inputs", gInputPacket)
 		case frameBuffer = <-gui.FrameBufferChan:
 			//fmt.Println("buffer event recv")
 			//update frame buffer from gui event

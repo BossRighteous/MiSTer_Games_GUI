@@ -115,10 +115,10 @@ func (client *UdpClient) PollInput() (chan GroovyInputPacket, chan bool) {
 			case <-inputQuitChan:
 				return
 			default:
-				fmt.Println("listening for input")
+				//fmt.Println("listening for input")
 				buf := make([]byte, 1024)
 				rlen, _, err := client.iConn.ReadFrom(buf)
-				fmt.Println("UDP READ", rlen)
+				//fmt.Println("UDP READ", rlen)
 				if err != nil {
 					fmt.Println("UDP READ ERROR", err)
 				}

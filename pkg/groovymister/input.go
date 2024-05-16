@@ -125,10 +125,11 @@ func isJoyPressed(joy GroovyJoy, key InputKey) bool {
 }
 
 type GroovyInput struct {
-	PrevJoy1 GroovyJoy
-	Joy1     GroovyJoy
-	PrevJoy2 GroovyJoy
-	Joy2     GroovyJoy
+	PrevJoy1   GroovyJoy
+	Joy1       GroovyJoy
+	PrevJoy2   GroovyJoy
+	Joy2       GroovyJoy
+	IsDisabled bool
 }
 
 func (input *GroovyInput) AddInputPacket(packet GroovyInputPacket) {
@@ -139,6 +140,9 @@ func (input *GroovyInput) AddInputPacket(packet GroovyInputPacket) {
 }
 
 func (input *GroovyInput) IsPressed(joyNum uint8, key InputKey) bool {
+	if input.IsDisabled {
+		return false
+	}
 	if joyNum == 2 {
 		return isJoyPressed(input.Joy2, key)
 	}
@@ -146,6 +150,9 @@ func (input *GroovyInput) IsPressed(joyNum uint8, key InputKey) bool {
 }
 
 func (input *GroovyInput) IsJustPressed(joyNum uint8, key InputKey) bool {
+	if input.IsDisabled {
+		return false
+	}
 	if joyNum == 2 {
 		return isJoyPressed(input.Joy2, key) && !isJoyPressed(input.PrevJoy2, key)
 	}
@@ -153,6 +160,9 @@ func (input *GroovyInput) IsJustPressed(joyNum uint8, key InputKey) bool {
 }
 
 func (input *GroovyInput) IsJustReleased(joyNum uint8, key InputKey) bool {
+	if input.IsDisabled {
+		return false
+	}
 	if joyNum == 2 {
 		return !isJoyPressed(input.Joy2, key) && isJoyPressed(input.PrevJoy2, key)
 	}
