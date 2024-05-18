@@ -18,7 +18,7 @@ type Game struct {
 	GameID      int
 	Name        string
 	IsIndexed   int
-	GenreId     int
+	GenreID     int
 	Genre       string
 	Rating      string
 	ReleaseDate string

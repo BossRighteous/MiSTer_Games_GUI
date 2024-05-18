@@ -24,7 +24,7 @@ func (screen *ScreenRoms) Setup(guiState *GUIState) {
 		}
 		items = append(items, item)
 	}
-	screen.list = NewList(8, screen.guiState, items)
+	screen.list = NewList(screen.guiState, items, 0)
 }
 
 func (screen *ScreenRoms) OnEnter() {

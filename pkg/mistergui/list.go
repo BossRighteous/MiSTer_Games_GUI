@@ -1,9 +1,12 @@
 package mistergui
 
 import (
+	"fmt"
 	"image"
 	"image/draw"
 	"math"
+
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mgdb"
 )
 
 type List struct {
@@ -113,7 +116,10 @@ func (list *List) PageItems() []ListItem {
 	return list.items[list.PageInitialIndex() : list.PageFinalIndex()+1]
 }
 
-func NewList(perPage int, guiState *GUIState, items []ListItem) *List {
+func NewList(guiState *GUIState, items []ListItem, perPage int) *List {
+	if perPage == 0 {
+		perPage = 10
+	}
 	list := &List{
 		perPage:        perPage,
 		items:          items,
@@ -122,9 +128,6 @@ func NewList(perPage int, guiState *GUIState, items []ListItem) *List {
 	}
 	return list
 }
-
-var ListPadding = 16
-var DefaultListRect = image.Rect(0, 0, 320-(ListPadding*2), 240-(ListPadding*2))
 
 var DefaultListRender = func(list *List) {
 	items := list.PageItems()
@@ -136,9 +139,9 @@ var DefaultListRender = func(list *List) {
 		}
 	}
 	surface := list.guiState.Surface
-	surface.Erase(DefaultListRect, P0)
-	img := DrawText(textStrings, DefaultListRect, image.Transparent)
-	draw.Draw(surface.Image, DefaultListRect, img, image.Point{0, 0}, draw.Over)
+	surface.Erase(surface.Image.Rect, P0)
+	img := DrawText(textStrings, surface.Image.Rect, image.Transparent)
+	draw.Draw(surface.Image, surface.Image.Rect, img, P0, draw.Over)
 }
 
 type ListItem interface {
@@ -168,4 +171,23 @@ func (item *BasicListItem) OnEnter() {
 }
 
 func (item *BasicListItem) OnExit() {
+}
+
+type GameListItem struct {
+	Game   mgdb.GameListItem
+	screen *ScreenGames
+}
+
+func (item *GameListItem) Label() string {
+	return item.Game.Name
+}
+
+func (item *GameListItem) OnSelect() {
+	fmt.Println("OnSelect game item", item.Label())
+}
+
+func (item *GameListItem) OnEnter() {
+}
+
+func (item *GameListItem) OnExit() {
 }

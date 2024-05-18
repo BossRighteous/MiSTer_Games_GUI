@@ -1,4 +1,4 @@
-package mistergui
+package img
 
 import (
 	"bytes"
@@ -16,5 +16,3 @@ func DecodeImageBytes(imageBytes *[]byte) (*image.Image, error) {
 	img = imaging.Fit(img, 320, 240, imaging.Lanczos)
 	return &img, nil
 }
-
-//var ListingBg = DecodeImageBytes(Embeds.ListingBg)
