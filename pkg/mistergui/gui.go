@@ -14,12 +14,6 @@ type TickData struct {
 	InputPacket groovymister.GroovyInputPacket
 }
 
-// mgdb version later
-type Game struct {
-	Name string
-	Path string
-}
-
 type GUIState struct {
 	Screen    Screen
 	Screens   *Screens
@@ -27,7 +21,7 @@ type GUIState struct {
 	IsLoading bool
 	Core      *mister.Core
 	Cores     *[]mister.Core
-	Game      *Game
+	GameID    int
 	Modal     *Modal
 	AsyncChan chan AsyncCallback
 	Surface   *Surface
@@ -78,7 +72,7 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 		IsChanged: false,
 		Core:      &cores[0],
 		Cores:     &cores,
-		Game:      nil,
+		GameID:    0,
 		Modal:     nil,
 		AsyncChan: gui.AsyncCallbackChan,
 		Surface:   surface,

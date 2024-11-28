@@ -62,11 +62,6 @@ func (screen *ScreenGames) OnEnter() {
 		fmt.Println("AsyncChan sending")
 		screen.guiState.AsyncChan <- func(gui *GUI) {
 			screen.list.ReplaceItems(items)
-			item := screen.list.CurrentItem()
-			gameItem, ok := item.(*GameListItem)
-			if ok {
-				screen.loadAsyncGameAssets(gameItem.Game.GameID)
-			}
 			fmt.Println("AsyncChan callback executed")
 		}
 	}()
@@ -74,6 +69,12 @@ func (screen *ScreenGames) OnEnter() {
 }
 
 func (screen *ScreenGames) OnExit() {
+	screen.list.ReplaceItems([]ListItem{})
+	screen.view = ListView
+	screen.screenshot = nil
+	screen.titleScreen = nil
+	screen.infoImg = nil
+	screen.descriptionImg = nil
 
 }
 
@@ -117,16 +118,17 @@ func (screen *ScreenGames) onTickListView() {
 		} else if input.IsJustPressed(1, groovymister.InputB1) {
 			list.CurrentItem().OnSelect()
 		} else if input.IsJustPressed(1, groovymister.InputB3) {
+			item := list.CurrentItem()
+			gameItem, ok := item.(*GameListItem)
+			if ok {
+				screen.loadAsyncGameAssets(gameItem.Game.GameID)
+			}			
 			fmt.Println("changing view to ScreenshotView")
 			screen.view = ScreenshotView
 			screen.guiState.IsChanged = true
 		}
 		if itemChanged {
-			item := list.CurrentItem()
-			gameItem, ok := item.(*GameListItem)
-			if ok {
-				screen.loadAsyncGameAssets(gameItem.Game.GameID)
-			}
+			// Only load assets on page change
 		}
 	}
 	if input.IsJustPressed(1, groovymister.InputB2) {

@@ -184,6 +184,9 @@ func (item *GameListItem) Label() string {
 
 func (item *GameListItem) OnSelect() {
 	fmt.Println("OnSelect game item", item.Label())
+	guiState := item.screen.guiState
+	guiState.GameID = item.Game.GameID
+	guiState.ChangeScreen(guiState.Screens.Roms)
 }
 
 func (item *GameListItem) OnEnter() {
