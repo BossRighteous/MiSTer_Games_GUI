@@ -1,7 +1,10 @@
 package mistergui
 
-type Screen interface {
-	Setup(*GUIState)
+type IScreen interface {
+	GUIState() *GUIState
+	Name() string
+	Parent() IScreen
+	Setup()
 	OnEnter()
 	OnExit()
 	OnTick(TickData)

@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	fmt.Println("Starting main process")
 	quitChan := make(chan bool, 1)
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -45,6 +46,7 @@ func main() {
 
 	isRunning := true
 
+	fmt.Println("Starting main loop")
 	for {
 		if !isRunning {
 			break

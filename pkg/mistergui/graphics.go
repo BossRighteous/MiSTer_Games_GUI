@@ -13,8 +13,15 @@ func DecodeImageBytes(imageBytes *[]byte) (*image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	img = imaging.Fit(img, 320, 240, imaging.Lanczos)
 	return &img, nil
 }
 
-//var ListingBg = DecodeImageBytes(Embeds.ListingBg)
+func DecodeImageBytesFit(imageBytes *[]byte) (*image.Image, error) {
+	reader := bytes.NewReader(*imageBytes)
+	img, err := imaging.Decode(reader)
+	if err != nil {
+		return nil, err
+	}
+	img = imaging.Fit(img, 320, 240, imaging.Lanczos)
+	return &img, nil
+}

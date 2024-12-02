@@ -7,24 +7,34 @@ import (
 )
 
 type ScreenRoms struct {
+	name     string
+	parent   IScreen
 	guiState *GUIState
 	list     *List
 }
 
-func (screen *ScreenRoms) Setup(guiState *GUIState) {
-	screen.guiState = guiState
+func (screen *ScreenRoms) GUIState() *GUIState {
+	return screen.guiState
+}
 
-	var items []ListItem
+func (screen *ScreenRoms) Parent() IScreen {
+	return screen.parent
+}
+
+func (screen *ScreenRoms) Name() string {
+	return screen.name
+}
+
+func (screen *ScreenRoms) Setup() {
+	var items []IListItem
 	for i := 0; i < 1000; i++ {
 		item := &BasicListItem{
 			label: fmt.Sprintf("Item%v", i),
-		}
-		item.selectCallback = func() {
-			fmt.Println("OnSelect item", item.Label())
+			list:  screen.list,
 		}
 		items = append(items, item)
 	}
-	screen.list = NewList(screen.guiState, items, 0)
+	screen.list = NewList(screen, screen.guiState, items, 0)
 }
 
 func (screen *ScreenRoms) OnEnter() {

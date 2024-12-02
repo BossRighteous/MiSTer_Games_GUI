@@ -22,6 +22,8 @@ const (
 var LoadingImage image.Image = image.NewNRGBA(image.Rect(0, 0, 0, 0))
 
 type ScreenGames struct {
+	name           string
+	parent         IScreen
 	guiState       *GUIState
 	list           *List
 	client         *mgdb.MGDBClient
@@ -32,9 +34,20 @@ type ScreenGames struct {
 	view           MetaView
 }
 
-func (screen *ScreenGames) Setup(guiState *GUIState) {
-	screen.guiState = guiState
-	screen.list = NewList(screen.guiState, []ListItem{}, 0)
+func (screen *ScreenGames) GUIState() *GUIState {
+	return screen.guiState
+}
+
+func (screen *ScreenGames) Parent() IScreen {
+	return screen.parent
+}
+
+func (screen *ScreenGames) Name() string {
+	return screen.name
+}
+
+func (screen *ScreenGames) Setup() {
+	screen.list = NewList(screen, screen.guiState, []IListItem{}, 0)
 	screen.view = ListView
 }
 
@@ -50,12 +63,13 @@ func (screen *ScreenGames) OnEnter() {
 		mgdbList, _ := client.GetGameList()
 		//fmt.Printf("%+v\n", list)
 
-		var items []ListItem
+		var items []IListItem
 		for _, mgdbGameItem := range mgdbList {
 			// Make GameListItem with GameID for additonal use
 			item := &GameListItem{
 				Game:   mgdbGameItem,
 				screen: screen,
+				list:   screen.list,
 			}
 			items = append(items, item)
 		}
@@ -69,7 +83,7 @@ func (screen *ScreenGames) OnEnter() {
 }
 
 func (screen *ScreenGames) OnExit() {
-	screen.list.ReplaceItems([]ListItem{})
+	screen.list.ReplaceItems([]IListItem{})
 	screen.view = ListView
 	screen.screenshot = nil
 	screen.titleScreen = nil
@@ -115,25 +129,31 @@ func (screen *ScreenGames) onTickListView() {
 		} else if input.IsJustPressed(1, groovymister.InputLeft) {
 			list.PreviousPage()
 			itemChanged = true
-		} else if input.IsJustPressed(1, groovymister.InputB1) {
+		} else {
+			list.CurrentItem().OnTick()
+		}
+		/*else if input.IsJustPressed(1, groovymister.InputB1) {
 			list.CurrentItem().OnSelect()
 		} else if input.IsJustPressed(1, groovymister.InputB3) {
 			item := list.CurrentItem()
 			gameItem, ok := item.(*GameListItem)
 			if ok {
 				screen.loadAsyncGameAssets(gameItem.Game.GameID)
-			}			
+			}
 			fmt.Println("changing view to ScreenshotView")
 			screen.view = ScreenshotView
 			screen.guiState.IsChanged = true
 		}
+		*/
 		if itemChanged {
-			// Only load assets on page change
+			screen.guiState.IsChanged = true
 		}
 	}
-	if input.IsJustPressed(1, groovymister.InputB2) {
-		fmt.Println("back button pressed, return to cores")
-	}
+	/*
+		if input.IsJustPressed(1, groovymister.InputB2) {
+			fmt.Println("back button pressed, return to cores")
+		}
+	*/
 }
 
 func (screen *ScreenGames) loadAsyncGameAssets(gameID int) {

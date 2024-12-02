@@ -3,6 +3,7 @@ package mistergui
 import (
 	"fmt"
 	"image"
+	"image/draw"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mister"
@@ -15,8 +16,7 @@ type TickData struct {
 }
 
 type GUIState struct {
-	Screen    Screen
-	Screens   *Screens
+	Screen    IScreen
 	IsChanged bool
 	IsLoading bool
 	Core      *mister.Core
@@ -29,12 +29,23 @@ type GUIState struct {
 	Modeline  *groovymister.Modeline
 }
 
-func (state *GUIState) ChangeScreen(newScreen Screen) {
+func (state *GUIState) PushScreen(newScreen IScreen) {
 	if state.Screen != nil {
 		state.Screen.OnExit()
 	}
 	state.Screen = newScreen
 	state.Screen.OnEnter()
+}
+
+func (state *GUIState) PopScreen() {
+	if state.Screen != nil {
+		state.Screen.OnExit()
+	}
+	parent := state.Screen.Parent()
+	if parent != nil {
+		state.Screen = parent
+		state.Screen.OnEnter()
+	}
 }
 
 type GUI struct {
@@ -54,21 +65,21 @@ var P0 image.Point = image.Point{0, 0}
 func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 	fmt.Println("setting up GUI")
 
+	p0 := image.Point{0, 0}
 	surface := NewSurface(modeline.HActive, modeline.VActive, modeline.Interlace)
 	bgColor := ColorBGR8{uint8(104), uint8(66), uint8(13)}
 	surface.FillBg(bgColor)
-	p0 := image.Point{0, 0}
+	listingBgImg, err := DecodeImageBytes(Embeds.ListingBg)
+	if err == nil {
+		draw.Draw(surface.BgImage, surface.Image.Bounds(), *listingBgImg, p0, draw.Over)
+	}
+
 	surface.Erase(surface.BgImage.Bounds(), p0)
 
 	cores := mister.GetCoresFromJSON()
 
 	gui.State = &GUIState{
-		Screen: nil,
-		Screens: &Screens{
-			Cores: &ScreenCores{},
-			Games: &ScreenGames{},
-			Roms:  &ScreenRoms{},
-		},
+		Screen:    nil,
 		IsChanged: false,
 		Core:      &cores[0],
 		Cores:     &cores,
@@ -80,11 +91,9 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 		Modeline:  modeline,
 	}
 
-	gui.State.Screens.Cores.Setup(gui.State)
-	gui.State.Screens.Games.Setup(gui.State)
-	gui.State.Screens.Roms.Setup(gui.State)
-
-	gui.State.ChangeScreen(gui.State.Screens.Games)
+	rootScreen := &ScreenCores{parent: nil, guiState: gui.State, name: "Root"}
+	rootScreen.Setup()
+	gui.State.PushScreen(rootScreen)
 
 	//gui.psImage = ListingBg
 	//draw.Draw(gui.surface.Image, gui.surface.Image.Bounds(), *gui.psImage, p0, draw.Over)
@@ -115,7 +124,6 @@ func (gui *GUI) OnTick(tick TickData) {
 	//fmt.Printf("%v fps", fpsInt)
 	//fpsImg := DrawText([]string{fmt.Sprintf("%v", fpsInt)}, image.Rect(0, 0, 40, 30), image.White)
 	//draw.Draw(gui.surface.Image, fpsImg.Bounds(), fpsImg, P0, draw.Src)
-
 	// Observe inputs
 	gui.State.Input.AddInputPacket(tick.InputPacket)
 
