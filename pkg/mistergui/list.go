@@ -263,8 +263,6 @@ func (item *GameListItem) Label() string {
 
 func (item *GameListItem) OnTick() {
 	fmt.Println("OnSelect game item", item.Label())
-	guiState := item.List().Screen().GUIState()
-	guiState.GameID = item.Game.GameID
 }
 
 func (item *GameListItem) OnEnter() {

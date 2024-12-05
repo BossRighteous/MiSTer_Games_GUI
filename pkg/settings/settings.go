@@ -7,26 +7,22 @@ import (
 )
 
 type Settings struct {
-	MiSTerHost        string
-	UdpMtuSize        uint16
-	Modeline          string
-	FrameRate         float64
-	Interlace         bool
-	MetaPath          string
-	InputSource       byte
-	GamesPathOverride string
+	MiSTerHost      string
+	UdpMtuSize      uint16
+	Modeline        string
+	FrameRate       float64
+	Interlace       bool
+	CollectionsPath string
 }
 
 func ParseIniSettings(iniPath string) *Settings {
 	settingsDefault := Settings{
-		MiSTerHost:        "127.0.0.1",
-		UdpMtuSize:        65496, // 2^16 - 40 header bytes on loopback
-		Modeline:          "6.700 320 336 367 426 240 244 247 262",
-		FrameRate:         60,
-		Interlace:         false,
-		MetaPath:          "/media/fat/.mistergamesgui",
-		InputSource:       0,
-		GamesPathOverride: "",
+		MiSTerHost:      "127.0.0.1",
+		UdpMtuSize:      65496, // 2^16 - 40 header bytes on loopback
+		Modeline:        "6.700 320 336 367 426 240 244 247 262",
+		FrameRate:       60,
+		Interlace:       false,
+		CollectionsPath: "/media/fat/_Scripts/mistergamesgui/collections",
 	}
 
 	if iniPath != "" {
@@ -66,19 +62,9 @@ func ParseIniSettings(iniPath string) *Settings {
 			settingsDefault.Interlace = iniInterlace
 		}
 
-		iniInputSource, err := section.Key("input_source").Uint()
-		if err == nil && iniInputSource <= 255 {
-			settingsDefault.InputSource = byte(iniInputSource)
-		}
-
-		iniMetaPath := section.Key("meta_path").String()
-		if iniMetaPath != "" {
-			settingsDefault.MetaPath = iniMetaPath
-		}
-
-		iniGamesPathOverride := section.Key("games_path_override").String()
-		if iniGamesPathOverride != "" {
-			settingsDefault.GamesPathOverride = iniGamesPathOverride
+		iniCollectionsPath := section.Key("collections_path").String()
+		if iniCollectionsPath != "" {
+			settingsDefault.CollectionsPath = iniCollectionsPath
 		}
 
 	}

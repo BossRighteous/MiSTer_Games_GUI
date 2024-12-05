@@ -6,7 +6,6 @@ import (
 	"image/draw"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
-	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mister"
 )
 
 type TickData struct {
@@ -19,10 +18,6 @@ type GUIState struct {
 	Screen    IScreen
 	IsChanged bool
 	IsLoading bool
-	Core      *mister.Core
-	Cores     *[]mister.Core
-	GameID    int
-	Modal     *Modal
 	AsyncChan chan AsyncCallback
 	Surface   *Surface
 	Input     *groovymister.GroovyInput
@@ -76,15 +71,9 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 
 	surface.Erase(surface.BgImage.Bounds(), p0)
 
-	cores := mister.GetCoresFromJSON()
-
 	gui.State = &GUIState{
 		Screen:    nil,
 		IsChanged: false,
-		Core:      &cores[0],
-		Cores:     &cores,
-		GameID:    0,
-		Modal:     nil,
 		AsyncChan: gui.AsyncCallbackChan,
 		Surface:   surface,
 		Input:     &groovymister.GroovyInput{},
@@ -126,24 +115,6 @@ func (gui *GUI) OnTick(tick TickData) {
 	//draw.Draw(gui.surface.Image, fpsImg.Bounds(), fpsImg, P0, draw.Src)
 	// Observe inputs
 	gui.State.Input.AddInputPacket(tick.InputPacket)
-
-	if gui.State.Modal != nil {
-		modal := *gui.State.Modal
-		if gui.State.IsChanged {
-			modal.Render()
-		}
-
-		if gui.State.Input.IsJustPressed(1, groovymister.InputB1) {
-			modal.OnAccept()
-			gui.State.Modal = nil
-			return
-		} else if gui.State.Input.IsJustPressed(1, groovymister.InputB2) {
-			modal.OnReject()
-			gui.State.Modal = nil
-			return
-		}
-		return
-	}
 
 	gui.State.Screen.OnTick(tick)
 

@@ -7,6 +7,10 @@ import (
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mrext"
 )
 
+/*
+This is for reference, but will be replaced.
+*/
+
 type ScreenCores struct {
 	name     string
 	parent   IScreen
