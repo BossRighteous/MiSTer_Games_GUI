@@ -53,6 +53,7 @@ func (screen *ScreenCores) Setup() {
 	}
 
 	{
+		// MGL Test (real console)
 		item := &BasicListItem{
 			label:        fmt.Sprintf("Print MGL Test"),
 			list:         screen.list,
@@ -61,6 +62,44 @@ func (screen *ScreenCores) Setup() {
 		item.tickCallback = func() {
 			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
 				fmt.Println(mrext.GetSampleMgl())
+			}
+		}
+		items = append(items, item)
+	}
+
+	{
+		// Scan MGDBGame
+		item := &BasicListItem{
+			label:        fmt.Sprintf("Console Test"),
+			list:         screen.list,
+			buttonsLabel: "A: Accept",
+		}
+		item.tickCallback = func() {
+			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
+				outBuffer := make(chan string, 1024)
+				completedOk := make(chan bool)
+				consoleState := ConsoleState{
+					outBuffer:   outBuffer,
+					completedOk: completedOk,
+				}
+				newScreen := &ScreenConsole{
+					parent:       screen,
+					guiState:     screen.guiState,
+					name:         item.Label(),
+					consoleState: consoleState,
+				}
+				newScreen.Setup()
+				screen.guiState.PushScreen(newScreen)
+				screen.guiState.IsChanged = true
+
+				go func() {
+					i := 0
+					for i < 100000 {
+						i++
+						consoleState.outBuffer <- fmt.Sprint(i)
+					}
+					completedOk <- true
+				}()
 			}
 		}
 		items = append(items, item)

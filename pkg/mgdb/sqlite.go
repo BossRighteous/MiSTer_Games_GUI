@@ -21,22 +21,21 @@ type MGDBClient struct {
 	db   *sql.DB
 }
 
-func (mgdb MGDBClient) GetMGDBInfo() (MGDBInfo, error) {
+func (mgdb *MGDBClient) GetMGDBInfo() (MGDBInfo, error) {
 	var info MGDBInfo
 	if mgdb.db == nil {
 		return info, &DBNilError{}
 	}
 	err := mgdb.db.QueryRow(
-		"select CoreDir, CoreName, CoreSlug, "+
-			"BuildDate, Description, IndexDir "+
+		"select CollectionName, GamesFolder, SupportedSystemIds, "+
+			"BuildDate, Description "+
 			"from MGDBInfo",
 	).Scan(
-		&info.CoreDir,
-		&info.CoreName,
-		&info.CoreSlug,
+		&info.CollectionName,
+		&info.GamesFolder,
+		&info.SupportedSystemIds,
 		&info.BuildDate,
 		&info.Description,
-		&info.IndexDir,
 	)
 	if err != nil {
 		return info, err
@@ -44,18 +43,18 @@ func (mgdb MGDBClient) GetMGDBInfo() (MGDBInfo, error) {
 	return info, nil
 }
 
-func (mgdb MGDBClient) GetGameList() ([]GameListItem, error) {
-	var gameList []GameListItem
+func (mgdb *MGDBClient) GetGameList() ([]Game, error) {
+	var gameList []Game
 	if mgdb.db == nil {
 		return gameList, &DBNilError{}
 	}
-	rows, err := mgdb.db.Query("select GameID, Name from Game order by Name ASC")
+	rows, err := mgdb.db.Query("select GameID, Name from Game where IsIndexed = 1 order by Name ASC")
 	if err != nil {
 		return gameList, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		game := GameListItem{}
+		game := Game{}
 		err := rows.Scan(&game.GameID, &game.Name)
 		if err != nil {
 			return gameList, err
@@ -72,13 +71,13 @@ func (mgdb MGDBClient) GetGameList() ([]GameListItem, error) {
 	return gameList, nil
 }
 
-func (mgdb MGDBClient) GetGame(gameID int) (Game, error) {
+func (mgdb *MGDBClient) GetGame(gameID int) (Game, error) {
 	var game Game
 	if mgdb.db == nil {
 		return game, &DBNilError{}
 	}
 	err := mgdb.db.QueryRow(
-		"select Game.GameID, Game.Name, Genre.Name as GenreName, Game.Rating, "+
+		"select Game.GameID, Game.Name, Genre.Name as GenreName, Game.IsIndexed, Game.Rating, "+
 			"Game.ReleaseDate, Game.Developer, Game.Publisher, Game.Players, Game.Description "+
 			"from Game JOIN Genre on Genre.GenreID = Game.GenreID "+
 			"where Game.GameID = ?", gameID,
@@ -86,6 +85,7 @@ func (mgdb MGDBClient) GetGame(gameID int) (Game, error) {
 		&game.GameID,
 		&game.Name,
 		&game.Genre,
+		&game.IsIndexed,
 		&game.Rating,
 		&game.ReleaseDate,
 		&game.Developer,
@@ -99,7 +99,7 @@ func (mgdb MGDBClient) GetGame(gameID int) (Game, error) {
 	return game, nil
 }
 
-func (mgdb MGDBClient) getGameImage(table string, gameID int) (*image.Image, error) {
+func (mgdb *MGDBClient) getGameImage(table string, gameID int) (*image.Image, error) {
 	if mgdb.db == nil {
 		return nil, &DBNilError{}
 	}
@@ -125,11 +125,11 @@ func (mgdb MGDBClient) getGameImage(table string, gameID int) (*image.Image, err
 	return screenImg, nil
 }
 
-func (mgdb MGDBClient) GetGameScreenshot(gameID int) (*image.Image, error) {
+func (mgdb *MGDBClient) GetGameScreenshot(gameID int) (*image.Image, error) {
 	return mgdb.getGameImage("Screenshot", gameID)
 }
 
-func (mgdb MGDBClient) GetGameTitleScreen(gameID int) (*image.Image, error) {
+func (mgdb *MGDBClient) GetGameTitleScreen(gameID int) (*image.Image, error) {
 	return mgdb.getGameImage("TitleScreen", gameID)
 }
 

@@ -249,7 +249,7 @@ func (item *BasicListItem) ButtonsLabel() string {
 
 type GameListItem struct {
 	list   *List
-	Game   mgdb.GameListItem
+	Game   mgdb.Game
 	screen *ScreenGames
 }
 
