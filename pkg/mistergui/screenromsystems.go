@@ -5,35 +5,36 @@ import (
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mgdb"
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mrext"
 )
 
-type ScreenRoms struct {
+type ScreenRomSystems struct {
 	name     string
 	parent   IScreen
 	guiState *GUIState
 	list     *List
 	client   *mgdb.MGDBClient
-	game     mgdb.Game
+	rom      mgdb.IndexedRom
 }
 
-func (screen *ScreenRoms) GUIState() *GUIState {
+func (screen *ScreenRomSystems) GUIState() *GUIState {
 	return screen.guiState
 }
 
-func (screen *ScreenRoms) Parent() IScreen {
+func (screen *ScreenRomSystems) Parent() IScreen {
 	return screen.parent
 }
 
-func (screen *ScreenRoms) Name() string {
+func (screen *ScreenRomSystems) Name() string {
 	return screen.name
 }
 
-func (screen *ScreenRoms) Setup() {
-	screen.name = "ROMs"
+func (screen *ScreenRomSystems) Setup() {
+	screen.name = "ROM Systems"
 
 	var items []IListItem
 
-	fmt.Println("ScreenRoms Setup", screen.name)
+	fmt.Println("ScreenRomSystems Setup", screen.name)
 
 	screen.list = NewList(screen, screen.guiState, make([]IListItem, 0), 0)
 
@@ -52,30 +53,32 @@ func (screen *ScreenRoms) Setup() {
 		items = append(items, item)
 	}
 
+	{
+		item := &BasicListItem{
+			label:        fmt.Sprintf("%v%v", screen.rom.FileName, screen.rom.FileExt),
+			list:         screen.list,
+			buttonsLabel: "ROM to load below",
+		}
+		items = append(items, item)
+	}
+
 	client := screen.client
 
-	roms, _ := client.GetIndexedRoms(screen.game.GameID)
+	// Move to new screen
+	info, _ := client.GetMGDBInfo()
 
-	for _, rom := range roms {
+	systems := mrext.GetSystemsByIDsString(info.SupportedSystemIds)
+
+	for _, system := range systems {
 		item := &BasicListItem{
-			label:        fmt.Sprintf("%v%v", rom.FileName, rom.FileExt),
+			label:        fmt.Sprintf("Load as %v", system.Name),
 			list:         screen.list,
-			buttonsLabel: "A: Choose System to Load ROM",
+			buttonsLabel: "A: Load ROM via MGL Command and Exit GUI",
 		}
 		item.tickCallback = func() {
 			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
 				fmt.Println("OnSelect item", item.Label())
-				fmt.Println("pressed B1")
-				romSystemScreen := &ScreenRomSystems{
-					parent:   screen,
-					guiState: screen.guiState,
-					name:     item.Label(),
-					client:   screen.client,
-					rom:      rom,
-				}
-				romSystemScreen.Setup()
-				screen.guiState.PushScreen(romSystemScreen)
-				screen.guiState.IsChanged = true
+				fmt.Println(mrext.GetSampleMgl())
 			}
 
 		}
@@ -86,17 +89,17 @@ func (screen *ScreenRoms) Setup() {
 
 }
 
-func (screen *ScreenRoms) OnEnter() {
-	fmt.Println("ScreenRoms OnEnter")
+func (screen *ScreenRomSystems) OnEnter() {
+	fmt.Println("ScreenRomSystems OnEnter")
 	screen.list.Render()
 }
 
-func (screen *ScreenRoms) OnExit() {
-	fmt.Println("ScreenRoms OnExit", screen.name)
+func (screen *ScreenRomSystems) OnExit() {
+	fmt.Println("ScreenRomSystems OnExit", screen.name)
 
 }
 
-func (screen *ScreenRoms) OnTick(tick TickData) {
+func (screen *ScreenRomSystems) OnTick(tick TickData) {
 	list := screen.list
 	if list == nil {
 		return
@@ -105,11 +108,11 @@ func (screen *ScreenRoms) OnTick(tick TickData) {
 	list.OnTick()
 }
 
-func (screen *ScreenRoms) Render() {
+func (screen *ScreenRomSystems) Render() {
 	//fmt.Println("screenCores Render")
 	screen.list.Render()
 }
 
-func (screen *ScreenRoms) TearDown() {
-	fmt.Println("ScreenRoms OnTearDown", screen.name)
+func (screen *ScreenRomSystems) TearDown() {
+	fmt.Println("ScreenRomSystems OnTearDown", screen.name)
 }

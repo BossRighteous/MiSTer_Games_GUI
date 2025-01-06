@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mgdb"
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/utils"
 	"github.com/wizzomafizzo/mrext/pkg/config"
 	"github.com/wizzomafizzo/mrext/pkg/games"
@@ -117,58 +116,4 @@ func GetFirstGamePathFromRelative(relPath string) (string, bool) {
 		}
 	}
 	return relPath, false
-}
-
-func ScanMGDBGames(client mgdb.MGDBClient) (chan string, chan bool) {
-	outBuffer := make(chan string, 1024)
-	completedOk := make(chan bool)
-
-	go func() {
-		bPrint := func(msg string) {
-			fmt.Println(msg)
-			outBuffer <- msg
-		}
-
-		info, err := client.GetMGDBInfo()
-		if err != nil {
-			bPrint(err.Error())
-			completedOk <- false
-			return
-		}
-
-		// TODO: reset IsIndexed on Games table to 0
-
-		systems := GetSystemsByIDsString(info.SupportedSystemIds)
-		roms, err := GetSystemsGamesPaths(systems)
-		if err != nil {
-			bPrint(err.Error())
-			completedOk <- false
-			return
-		}
-
-		bPrint(fmt.Sprintf("Found %v ROMs", len(roms)))
-		indexedCount := 0
-		for _, romAbsPath := range roms {
-			fmt.Println(romAbsPath)
-			romRelPath, ok := GetRelativeGamePath(romAbsPath)
-			if !ok {
-				bPrint("Relative Pathing Error on Scanned ROM")
-				bPrint(romRelPath)
-				continue
-			}
-			bPrint(fmt.Sprintf("Found %v", romRelPath))
-
-			// Match to DB
-			// Update Game row IsIndexed
-			// Add IndexedRom record
-			indexedCount++
-			bPrint(fmt.Sprintf("Indexed %v", romRelPath))
-
-		}
-		bPrint(fmt.Sprintf("Indexed %v ROMs", len(roms)))
-
-		completedOk <- true
-	}()
-
-	return outBuffer, completedOk
 }

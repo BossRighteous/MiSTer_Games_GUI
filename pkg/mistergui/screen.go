@@ -13,7 +13,7 @@ type IScreen interface {
 }
 
 type Screens struct {
-	Cores *ScreenCores
+	Cores *ScreenCollections
 	Games *ScreenGames
 	Roms  *ScreenRoms
 }

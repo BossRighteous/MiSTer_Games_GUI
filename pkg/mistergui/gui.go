@@ -6,6 +6,7 @@ import (
 	"image/draw"
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/settings"
 )
 
 type TickData struct {
@@ -22,6 +23,8 @@ type GUIState struct {
 	Surface   *Surface
 	Input     *groovymister.GroovyInput
 	Modeline  *groovymister.Modeline
+	QuitChan  chan bool
+	Settings  *settings.Settings
 }
 
 func (state *GUIState) PushScreen(newScreen IScreen) {
@@ -57,7 +60,7 @@ type AsyncCallback func(gui *GUI)
 
 var P0 image.Point = image.Point{0, 0}
 
-func (gui *GUI) Setup(modeline *groovymister.Modeline) {
+func (gui *GUI) Setup(modeline *groovymister.Modeline, settings *settings.Settings) {
 	fmt.Println("setting up GUI")
 
 	p0 := image.Point{0, 0}
@@ -78,9 +81,11 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline) {
 		Surface:   surface,
 		Input:     &groovymister.GroovyInput{},
 		Modeline:  modeline,
+		QuitChan:  gui.QuitChan,
+		Settings:  settings,
 	}
 
-	rootScreen := &ScreenCores{parent: nil, guiState: gui.State, name: "Root"}
+	rootScreen := &ScreenCollections{parent: nil, guiState: gui.State, name: "Root"}
 	rootScreen.Setup()
 	gui.State.PushScreen(rootScreen)
 

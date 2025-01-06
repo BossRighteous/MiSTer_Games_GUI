@@ -2,6 +2,7 @@ package mgdb
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -99,6 +100,31 @@ func (mgdb *MGDBClient) GetGame(gameID int) (Game, error) {
 	return game, nil
 }
 
+func (mgdb *MGDBClient) GetIndexedRoms(gameID int) ([]IndexedRom, error) {
+	var romList []IndexedRom
+	if mgdb.db == nil {
+		return romList, &DBNilError{}
+	}
+	rows, err := mgdb.db.Query("select FileName, FileExt, Path from IndexedRom where GameID = ? order by FileName ASC", gameID)
+	if err != nil {
+		return romList, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rom := IndexedRom{GameID: gameID}
+		err := rows.Scan(&rom.FileName, &rom.FileExt, &rom.Path)
+		if err != nil {
+			return romList, err
+		}
+		romList = append(romList, rom)
+	}
+	err = rows.Err()
+	if err != nil {
+		return romList, err
+	}
+	return romList, nil
+}
+
 func (mgdb *MGDBClient) getGameImage(table string, gameID int) (*image.Image, error) {
 	if mgdb.db == nil {
 		return nil, &DBNilError{}
@@ -131,6 +157,69 @@ func (mgdb *MGDBClient) GetGameScreenshot(gameID int) (*image.Image, error) {
 
 func (mgdb *MGDBClient) GetGameTitleScreen(gameID int) (*image.Image, error) {
 	return mgdb.getGameImage("TitleScreen", gameID)
+}
+
+func (mgdb *MGDBClient) FlushGamesIndex() error {
+	if _, err := mgdb.db.Exec("UPDATE Game SET IsIndexed = 0"); err != nil {
+		fmt.Println("FlushGamesIndex UPDATE Error")
+		return err
+	}
+	if _, err := mgdb.db.Exec("DELETE FROM IndexedRom"); err != nil {
+		fmt.Println("FlushGamesIndex DELETE Error")
+		return err
+	}
+	if _, err := mgdb.db.Exec("DELETE FROM SQLITE_SEQUENCE WHERE name='IndexedRom'"); err != nil {
+		fmt.Println("FlushGamesIndex DELETE SQLITE_SEQUENCE Error")
+	}
+	return nil
+}
+
+func (mgdb *MGDBClient) FindGameIdFromFilename(filename string) (int, error) {
+	var rom GamelistRom
+	err := mgdb.db.QueryRow(
+		fmt.Sprintf("select FileName, GameID from GamelistRom where FileName LIKE '%v'", filename),
+	).Scan(
+		&rom.FileName,
+		&rom.GameID,
+	)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return 0, err
+		}
+		// try slug
+		slug := SlugifyString(filename)
+		if slug != filename {
+			return mgdb.FindGameIdFromFilename(slug)
+		}
+		// Otherwise, no real error, just no match
+		return 0, nil
+	}
+	return rom.GameID, nil
+}
+
+func (mgdb *MGDBClient) IndexGameRom(rom IndexedRom) (bool, error) {
+	// Got a match, index it
+	if _, err := mgdb.db.Exec(fmt.Sprintf("UPDATE Game SET IsIndexed = 1 WHERE GameID = %v AND IsIndexed = 0", rom.GameID)); err != nil {
+		return false, err
+	}
+
+	stmt, err := mgdb.db.Prepare(
+		"insert into IndexedRom(" +
+			"Path, FileName, FileExt, GameID" +
+			") values (?, ?, ?, ?)",
+	)
+	if err != nil {
+		return false, err
+	}
+	if _, err = stmt.Exec(
+		rom.Path,
+		rom.FileName,
+		rom.FileExt,
+		rom.GameID,
+	); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func OpenMGDB(path string) (*MGDBClient, error) {

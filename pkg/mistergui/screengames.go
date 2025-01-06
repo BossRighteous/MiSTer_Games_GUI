@@ -7,6 +7,7 @@ import (
 
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/groovymister"
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mgdb"
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/mrext"
 )
 
 type MetaView int
@@ -32,6 +33,7 @@ type ScreenGames struct {
 	infoImg        *image.Image
 	descriptionImg *image.Image
 	view           MetaView
+	didScan        bool
 }
 
 func (screen *ScreenGames) GUIState() *GUIState {
@@ -47,23 +49,72 @@ func (screen *ScreenGames) Name() string {
 }
 
 func (screen *ScreenGames) Setup() {
+	screen.didScan = false
 	screen.list = NewList(screen, screen.guiState, []IListItem{}, 0)
 	screen.view = ListView
-}
 
-func (screen *ScreenGames) OnEnter() {
-	fmt.Println("screenCores OnEnter")
-	client, err := mgdb.OpenMGDB("/mnt/c/Users/bossr/Code/MiSTer_Games_GUI/games/N64/_N64.mgdb")
-	if err != nil {
-		fmt.Println(err)
+	var items []IListItem
+
+	{
+		item := &BasicListItem{
+			label:        fmt.Sprintf("Back to %v", screen.parent.Name()),
+			list:         screen.list,
+			buttonsLabel: "A: Accept",
+		}
+		item.tickCallback = func() {
+			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
+				fmt.Println("Back to Parent", screen.parent.Name())
+				screen.guiState.PopScreen()
+			}
+		}
+		items = append(items, item)
 	}
-	screen.client = client
+
+	if screen.client == nil {
+		item := &BasicListItem{
+			label:        "Unable to load Collection data",
+			list:         screen.list,
+			buttonsLabel: "",
+		}
+		items = append(items, item)
+		screen.list.ReplaceItems(items)
+		return
+	}
+
+	{
+		// Scan for ROMs
+		item := &BasicListItem{
+			label:        fmt.Sprintf("Scan for ROMs"),
+			list:         screen.list,
+			buttonsLabel: "A: Accept",
+		}
+		item.tickCallback = func() {
+			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
+				//
+				screen.didScan = true
+				outBuffer, completedOk := ScanMGDBGames(screen.client)
+				consoleState := ConsoleState{
+					outBuffer:   outBuffer,
+					completedOk: completedOk,
+				}
+				consoleScreen := &ScreenConsole{
+					parent:       screen,
+					guiState:     screen.guiState,
+					name:         item.Label(),
+					consoleState: consoleState,
+				}
+				consoleScreen.Setup()
+				screen.guiState.PushScreen(consoleScreen)
+				screen.guiState.IsChanged = true
+			}
+		}
+		items = append(items, item)
+	}
 
 	go func() {
+		client := screen.client
 		mgdbList, _ := client.GetGameList()
-		//fmt.Printf("%+v\n", list)
 
-		var items []IListItem
 		for _, mgdbGameItem := range mgdbList {
 			// Make GameListItem with GameID for additonal use
 			item := &GameListItem{
@@ -79,17 +130,25 @@ func (screen *ScreenGames) OnEnter() {
 			fmt.Println("AsyncChan callback executed")
 		}
 	}()
-	fmt.Println("Async called")
+
+	screen.list.ReplaceItems(items)
+}
+
+func (screen *ScreenGames) OnEnter() {
+	fmt.Println("screenCores OnEnter")
+	if screen.didScan {
+		screen.Setup()
+	}
+	screen.list.Render()
 }
 
 func (screen *ScreenGames) OnExit() {
-	screen.list.ReplaceItems([]IListItem{})
+	//screen.list.ReplaceItems([]IListItem{})
 	screen.view = ListView
 	screen.screenshot = nil
 	screen.titleScreen = nil
 	screen.infoImg = nil
 	screen.descriptionImg = nil
-
 }
 
 func (screen *ScreenGames) OnTick(tick TickData) {
@@ -98,6 +157,7 @@ func (screen *ScreenGames) OnTick(tick TickData) {
 		// Don't do anything until list is ready
 		return
 	}
+	screen.list.OnTick()
 
 	if screen.view == ListView {
 		screen.onTickListView()
@@ -112,51 +172,23 @@ func (screen *ScreenGames) OnTick(tick TickData) {
 	}
 }
 
-func (screen *ScreenGames) onTickListView() {
-	list := screen.list
-	input := screen.guiState.Input
-	if list.ItemCount() > 0 {
-		itemChanged := false
-		if input.IsJustPressed(1, groovymister.InputDown) {
-			list.NextItem()
-			itemChanged = true
-		} else if input.IsJustPressed(1, groovymister.InputUp) {
-			list.PreviousItem()
-			itemChanged = true
-		} else if input.IsJustPressed(1, groovymister.InputRight) {
-			list.NextPage()
-			itemChanged = true
-		} else if input.IsJustPressed(1, groovymister.InputLeft) {
-			list.PreviousPage()
-			itemChanged = true
-		} else {
-			list.CurrentItem().OnTick()
-		}
-		/*else if input.IsJustPressed(1, groovymister.InputB1) {
-			list.CurrentItem().OnSelect()
-		} else if input.IsJustPressed(1, groovymister.InputB3) {
-			item := list.CurrentItem()
-			gameItem, ok := item.(*GameListItem)
-			if ok {
-				screen.loadAsyncGameAssets(gameItem.Game.GameID)
-			}
-			fmt.Println("changing view to ScreenshotView")
-			screen.view = ScreenshotView
-			screen.guiState.IsChanged = true
-		}
-		*/
-		if itemChanged {
-			screen.guiState.IsChanged = true
-		}
+func (screen *ScreenGames) CycleMediaView() {
+	screen.view = screen.view + 1
+	if screen.view > 4 {
+		screen.view = 0
 	}
-	/*
-		if input.IsJustPressed(1, groovymister.InputB2) {
-			fmt.Println("back button pressed, return to cores")
-		}
-	*/
+	screen.guiState.IsChanged = true
 }
 
-func (screen *ScreenGames) loadAsyncGameAssets(gameID int) {
+func (screen *ScreenGames) ResetGameAssets() {
+	screen.screenshot = nil
+	screen.titleScreen = nil
+	screen.infoImg = nil
+	screen.descriptionImg = nil
+}
+
+func (screen *ScreenGames) LoadAsyncGameAssets(gameID int) {
+	fmt.Println("LoadAsyncGameAssets", gameID)
 	// load all go routines in parallel
 	if screen.screenshot != &LoadingImage {
 		screen.screenshot = &LoadingImage
@@ -252,76 +284,28 @@ func (screen *ScreenGames) loadAsyncGameAssets(gameID int) {
 }
 
 func (screen *ScreenGames) onTickScreenshotView() {
-	input := screen.guiState.Input
-	if input.IsJustPressed(1, groovymister.InputDown) ||
-		input.IsJustPressed(1, groovymister.InputUp) ||
-		input.IsJustPressed(1, groovymister.InputRight) ||
-		input.IsJustPressed(1, groovymister.InputLeft) ||
-		input.IsJustPressed(1, groovymister.InputB2) {
-		screen.view = ListView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to ListView")
-	} else if input.IsJustPressed(1, groovymister.InputB3) {
-		screen.view = TitleScreenView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to TitleScreenView")
-	}
+}
+
+func (screen *ScreenGames) onTickListView() {
 }
 
 func (screen *ScreenGames) onTickTitleScreenView() {
-	input := screen.guiState.Input
-	if input.IsJustPressed(1, groovymister.InputDown) ||
-		input.IsJustPressed(1, groovymister.InputUp) ||
-		input.IsJustPressed(1, groovymister.InputRight) ||
-		input.IsJustPressed(1, groovymister.InputLeft) ||
-		input.IsJustPressed(1, groovymister.InputB2) {
-		screen.view = ListView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to ListView")
-	} else if input.IsJustPressed(1, groovymister.InputB3) {
-		screen.view = InfoView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to InfoView")
-	}
 }
 
 func (screen *ScreenGames) onTickInfoView() {
-	input := screen.guiState.Input
-	if input.IsJustPressed(1, groovymister.InputDown) ||
-		input.IsJustPressed(1, groovymister.InputUp) ||
-		input.IsJustPressed(1, groovymister.InputRight) ||
-		input.IsJustPressed(1, groovymister.InputLeft) ||
-		input.IsJustPressed(1, groovymister.InputB2) {
-		screen.view = ListView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to ListView")
-	} else if input.IsJustPressed(1, groovymister.InputB3) {
-		screen.view = DescriptionView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to DescriptionView")
-	}
 }
 
 func (screen *ScreenGames) onTickDescriptionView() {
-	input := screen.guiState.Input
-	if input.IsJustPressed(1, groovymister.InputDown) ||
-		input.IsJustPressed(1, groovymister.InputUp) ||
-		input.IsJustPressed(1, groovymister.InputRight) ||
-		input.IsJustPressed(1, groovymister.InputLeft) ||
-		input.IsJustPressed(1, groovymister.InputB2) {
-		screen.view = ListView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to ListView")
-	} else if input.IsJustPressed(1, groovymister.InputB3) {
-		screen.view = ScreenshotView
-		screen.guiState.IsChanged = true
-		fmt.Println("changing view to ScreenshotView")
-	}
 }
 
 func (screen *ScreenGames) Render() {
 	fmt.Println("rendering Screen")
+	_, isCurrentItemGame := screen.list.CurrentItem().(*GameListItem)
 	if screen.view == ListView {
+		screen.renderListView()
+	} else if !isCurrentItemGame {
+		// Swap back to list view for non game items
+		screen.view = ListView
 		screen.renderListView()
 	} else if screen.view == ScreenshotView {
 		screen.renderScreenshotView()
@@ -346,6 +330,7 @@ func (screen *ScreenGames) renderScreenshotView() {
 		return
 	}
 	surface := screen.guiState.Surface
+	surface.Erase(surface.Image.Rect, P0)
 	draw.Draw(surface.Image, surface.Image.Rect, *screen.screenshot, P0, draw.Over)
 }
 
@@ -356,6 +341,7 @@ func (screen *ScreenGames) renderTitleScreenView() {
 		return
 	}
 	surface := screen.guiState.Surface
+	surface.Erase(surface.Image.Rect, P0)
 	draw.Draw(surface.Image, surface.Image.Rect, *screen.titleScreen, P0, draw.Over)
 
 }
@@ -386,4 +372,78 @@ func (screen *ScreenGames) renderDesciptionView() {
 
 func (screen *ScreenGames) TearDown() {
 
+}
+
+// Utility method for collection scanning
+func ScanMGDBGames(client *mgdb.MGDBClient) (chan string, chan bool) {
+	outBuffer := make(chan string, 1024)
+	completedOk := make(chan bool)
+
+	go func() {
+		bPrint := func(msg string) {
+			fmt.Println(msg)
+			outBuffer <- msg
+		}
+
+		info, err := client.GetMGDBInfo()
+		if err != nil {
+			bPrint(err.Error())
+			completedOk <- false
+			return
+		}
+
+		// TODO: reset IsIndexed on Games table to 0
+		if err := client.FlushGamesIndex(); err != nil {
+			fmt.Println(err)
+			bPrint("Could not flush Games index")
+			completedOk <- false
+			return
+		}
+
+		systems := mrext.GetSystemsByIDsString(info.SupportedSystemIds)
+		roms, err := mrext.GetSystemsGamesPaths(systems)
+		if err != nil {
+			bPrint(err.Error())
+			completedOk <- false
+			return
+		}
+
+		bPrint(fmt.Sprintf("Found %v ROMs", len(roms)))
+		indexedCount := 0
+		for _, romAbsPath := range roms {
+			fmt.Println(romAbsPath)
+			romRelPath, ok := mrext.GetRelativeGamePath(romAbsPath)
+			if !ok {
+				bPrint("Relative Pathing Error on Scanned ROM")
+				bPrint(romRelPath)
+				continue
+			}
+			bPrint(fmt.Sprintf("Found %v", romRelPath))
+
+			// Match to DB
+			// Update Game row IsIndexed
+			// Add IndexedRom record
+			indexedRom := mgdb.MakeIndexedRomFromPath(romRelPath, 0)
+
+			gameId, findErr := client.FindGameIdFromFilename(indexedRom.FileName)
+			if findErr != nil {
+				bPrint("Error attempting filename match in Collection")
+				bPrint(romRelPath)
+				continue
+			}
+			indexedRom.GameID = gameId
+
+			// Even 0 IDs should be indexed as unknown
+			client.IndexGameRom(indexedRom)
+
+			indexedCount++
+			bPrint(fmt.Sprintf("Indexed %v", romRelPath))
+
+		}
+		bPrint(fmt.Sprintf("Indexed %v ROMs", len(roms)))
+
+		completedOk <- true
+	}()
+
+	return outBuffer, completedOk
 }

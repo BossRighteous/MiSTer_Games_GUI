@@ -8,32 +8,32 @@ import (
 )
 
 /*
-This is for reference, but will be replaced.
+Dev testing screen
 */
 
-type ScreenCores struct {
+type ScreenDev struct {
 	name     string
 	parent   IScreen
 	guiState *GUIState
 	list     *List
 }
 
-func (screen *ScreenCores) GUIState() *GUIState {
+func (screen *ScreenDev) GUIState() *GUIState {
 	return screen.guiState
 }
 
-func (screen *ScreenCores) Parent() IScreen {
+func (screen *ScreenDev) Parent() IScreen {
 	return screen.parent
 }
 
-func (screen *ScreenCores) Name() string {
+func (screen *ScreenDev) Name() string {
 	return screen.name
 }
 
-func (screen *ScreenCores) Setup() {
+func (screen *ScreenDev) Setup() {
 	var items []IListItem
 
-	fmt.Println("screenCores Setup", screen.name)
+	fmt.Println("ScreenDev Setup", screen.name)
 
 	screen.list = NewList(screen, screen.guiState, make([]IListItem, 0), 0)
 
@@ -68,7 +68,7 @@ func (screen *ScreenCores) Setup() {
 	}
 
 	{
-		// Scan MGDBGame
+		// Scan Console Test
 		item := &BasicListItem{
 			label:        fmt.Sprintf("Console Test"),
 			list:         screen.list,
@@ -114,7 +114,7 @@ func (screen *ScreenCores) Setup() {
 		item.tickCallback = func() {
 			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
 				fmt.Println("OnSelect item", item.Label())
-				newScreen := &ScreenCores{parent: screen, guiState: screen.guiState, name: item.Label()}
+				newScreen := &ScreenDev{}
 				newScreen.Setup()
 				screen.guiState.PushScreen(newScreen)
 				screen.guiState.IsChanged = true
@@ -126,17 +126,17 @@ func (screen *ScreenCores) Setup() {
 	screen.list.ReplaceItems(items)
 }
 
-func (screen *ScreenCores) OnEnter() {
-	fmt.Println("screenCores OnEnter", screen.name)
+func (screen *ScreenDev) OnEnter() {
+	fmt.Println("ScreenDev OnEnter", screen.name)
 	screen.list.Render()
 }
 
-func (screen *ScreenCores) OnExit() {
-	fmt.Println("screenCores OnExit", screen.name)
+func (screen *ScreenDev) OnExit() {
+	fmt.Println("ScreenDev OnExit", screen.name)
 
 }
 
-func (screen *ScreenCores) OnTick(tick TickData) {
+func (screen *ScreenDev) OnTick(tick TickData) {
 	list := screen.list
 	if list == nil {
 		return
@@ -144,18 +144,18 @@ func (screen *ScreenCores) OnTick(tick TickData) {
 
 	list.OnTick()
 
-	//fmt.Println("screenCores OnTick", tick.FrameCount)
+	//fmt.Println("ScreenDev OnTick", tick.FrameCount)
 	//fmt.Println(screen.list.CurrentItem().Label())
 	//screen.list.NextItem()
 	//screen.list.CurrentItem().OnSelect()
 	//screen.guiState.IsChanged = true
 }
 
-func (screen *ScreenCores) Render() {
-	//fmt.Println("screenCores Render")
+func (screen *ScreenDev) Render() {
+	//fmt.Println("ScreenDev Render")
 	screen.list.Render()
 }
 
-func (screen *ScreenCores) TearDown() {
-	fmt.Println("screenCores OnTearDown", screen.name)
+func (screen *ScreenDev) TearDown() {
+	fmt.Println("ScreenDev OnTearDown", screen.name)
 }

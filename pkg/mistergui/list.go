@@ -262,15 +262,37 @@ func (item *GameListItem) Label() string {
 }
 
 func (item *GameListItem) OnTick() {
-	fmt.Println("OnSelect game item", item.Label())
+	screen := item.screen
+	input := screen.guiState.Input
+
+	if input.IsJustPressed(1, groovymister.InputB1) {
+		fmt.Println("pressed B1")
+		romScreen := &ScreenRoms{
+			parent:   screen,
+			guiState: screen.guiState,
+			name:     item.Label(),
+			client:   screen.client,
+			game:     item.Game,
+		}
+		romScreen.Setup()
+		screen.guiState.PushScreen(romScreen)
+		screen.guiState.IsChanged = true
+	} else if input.IsJustPressed(1, groovymister.InputB3) {
+		fmt.Println("pressed B3")
+		screen.CycleMediaView()
+	}
 }
 
 func (item *GameListItem) OnEnter() {
+	fmt.Println("Loading Async Assets")
+	item.screen.LoadAsyncGameAssets(item.Game.GameID)
 }
 
 func (item *GameListItem) OnExit() {
+	fmt.Println("ResetGameAssets")
+	item.screen.ResetGameAssets()
 }
 
 func (item *GameListItem) ButtonsLabel() string {
-	return ""
+	return "A: Choose ROM to Load, B: Cycle Media Views"
 }

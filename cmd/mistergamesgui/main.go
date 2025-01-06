@@ -42,7 +42,7 @@ func main() {
 
 	frameCount := uint32(0)
 	gui := mistergui.NewGUI()
-	gui.Setup(modeline)
+	gui.Setup(modeline, settings)
 
 	isRunning := true
 
@@ -53,6 +53,8 @@ func main() {
 		}
 		select {
 		case <-signalChan:
+			quitChan <- true
+		case <-gui.QuitChan:
 			quitChan <- true
 		case <-quitChan:
 			inputQuitChan <- true
