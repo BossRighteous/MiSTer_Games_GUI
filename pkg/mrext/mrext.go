@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/settings"
 	"github.com/BossRighteous/MiSTer_Games_GUI/pkg/utils"
 	"github.com/wizzomafizzo/mrext/pkg/config"
 	"github.com/wizzomafizzo/mrext/pkg/games"
@@ -43,9 +44,8 @@ func GetSystemsByIDsString(idsStr string) []games.System {
 }
 
 func GetGamesFolders() []string {
-	// TODO: HEY IDIOT DON'T FORGET THIS
-	isDev := true
-	if isDev {
+	settings := settings.ParseIniSettings("mistergamesgui.ini")
+	if settings.IsDev {
 		return []string{
 			"/mnt/c/Users/bossr/Code/MiSTer_Games_Data_Utils/cores",
 			"/mnt/c/Users/bossr/Code/MiSTer_Games_GUI/games",
@@ -116,4 +116,8 @@ func GetFirstGamePathFromRelative(relPath string) (string, bool) {
 		}
 	}
 	return relPath, false
+}
+
+func LoadSystemMGLFromPath(system games.System, path string) {
+	mister.LaunchGame(nil, system, path)
 }

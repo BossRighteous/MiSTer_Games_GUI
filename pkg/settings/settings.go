@@ -7,22 +7,28 @@ import (
 )
 
 type Settings struct {
-	MiSTerHost      string
-	UdpMtuSize      uint16
-	Modeline        string
-	FrameRate       float64
-	Interlace       bool
-	CollectionsPath string
+	MiSTerHost          string
+	UdpMtuSize          uint16
+	Modeline            string
+	FrameRate           float64
+	Interlace           bool
+	CollectionsPath     string
+	GroovyRBFPath       string
+	GroovyClientDelayMS int
+	IsDev               bool
 }
 
 func ParseIniSettings(iniPath string) *Settings {
 	settingsDefault := Settings{
-		MiSTerHost:      "127.0.0.1",
-		UdpMtuSize:      65496, // 2^16 - 40 header bytes on loopback
-		Modeline:        "6.700 320 336 367 426 240 244 247 262",
-		FrameRate:       60,
-		Interlace:       false,
-		CollectionsPath: "/media/fat/_Scripts/mistergamesgui/collections",
+		MiSTerHost:          "127.0.0.1",
+		UdpMtuSize:          65496, // 2^16 - 40 header bytes on loopback
+		Modeline:            "6.700 320 336 367 426 240 244 247 262",
+		FrameRate:           60,
+		Interlace:           false,
+		CollectionsPath:     "/media/fat/_Scripts/mistergamesgui/collections",
+		GroovyRBFPath:       "/media/fat/_Utility/Groovy_20240912.rbf",
+		GroovyClientDelayMS: 5000,
+		IsDev:               false,
 	}
 
 	if iniPath != "" {
@@ -65,6 +71,21 @@ func ParseIniSettings(iniPath string) *Settings {
 		iniCollectionsPath := section.Key("collections_path").String()
 		if iniCollectionsPath != "" {
 			settingsDefault.CollectionsPath = iniCollectionsPath
+		}
+
+		iniGroovyRbfPath := section.Key("groovy_rbf_path").String()
+		if iniGroovyRbfPath != "" {
+			settingsDefault.GroovyRBFPath = iniGroovyRbfPath
+		}
+
+		iniClientDelayMs, err := section.Key("groovy_client_delay_ms").Int()
+		if err == nil && iniClientDelayMs > 0 {
+			settingsDefault.GroovyClientDelayMS = iniClientDelayMs
+		}
+
+		iniIsDev, err := section.Key("is_dev").Bool()
+		if err == nil {
+			settingsDefault.IsDev = iniIsDev
 		}
 
 	}

@@ -53,14 +53,14 @@ func (screen *ScreenRomSystems) Setup() {
 		items = append(items, item)
 	}
 
-	{
+	/*{
 		item := &BasicListItem{
 			label:        fmt.Sprintf("%v%v", screen.rom.FileName, screen.rom.FileExt),
 			list:         screen.list,
 			buttonsLabel: "ROM to load below",
 		}
 		items = append(items, item)
-	}
+	}*/
 
 	client := screen.client
 
@@ -78,9 +78,15 @@ func (screen *ScreenRomSystems) Setup() {
 		item.tickCallback = func() {
 			if screen.guiState.Input.IsJustPressed(1, groovymister.InputB1) {
 				fmt.Println("OnSelect item", item.Label())
-				fmt.Println(mrext.GetSampleMgl())
+				absPath, found := mrext.GetFirstGamePathFromRelative(screen.rom.Path)
+				if !found {
+					item.label = fmt.Sprintf("!%v", item.label)
+					item.buttonsLabel = "ROM not found as indexed, cannot load."
+					return
+				}
+				mrext.LoadSystemMGLFromPath(system, absPath)
+				screen.guiState.QuitChan <- true
 			}
-
 		}
 		items = append(items, item)
 	}

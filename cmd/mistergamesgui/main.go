@@ -30,6 +30,16 @@ func main() {
 	fmt.Println(modeline)
 	frameBuffer = make([]uint8, int(modeline.HActive)*int(modeline.VActive)*mistergui.BGR8BytesPerPixel)
 
+	// Load Core and wait
+	if !settings.IsDev {
+		coreErr := groovymister.LaunchGroovyCore(settings.GroovyRBFPath)
+		if coreErr != nil {
+			fmt.Println(coreErr)
+			return
+		}
+		time.Sleep(time.Duration(settings.GroovyClientDelayMS) * time.Millisecond)
+	}
+
 	udpClient := groovymister.NewUdpClient(settings.MiSTerHost, int32(settings.UdpMtuSize))
 
 	udpClient.CmdInit()
@@ -70,15 +80,12 @@ func main() {
 			elapsed := tick.Sub(last)
 			last = tick
 			udpClient.CmdBlit(frameBuffer)
-
 			gui.TickChan <- mistergui.TickData{
 				FrameCount:  frameCount,
 				Delta:       elapsed.Seconds(),
 				InputPacket: gInputPacket,
 			}
-			//fmt.Println(elapsed.Seconds())
 		}
-
 	}
 	udpClient.CmdClose()
 	println("closed successfully")
