@@ -5,3 +5,5 @@ dev_commands.txt
 games/
 cmd/scratch/
 pkg/mistergui/embed
+_bin/
+_bin_bak/
