@@ -187,37 +187,48 @@ func (screen *ScreenGames) ResetGameAssets() {
 	screen.descriptionImg = nil
 }
 
-func (screen *ScreenGames) LoadAsyncGameAssets(gameID int) {
-	fmt.Println("LoadAsyncGameAssets", gameID)
+func (screen *ScreenGames) LoadAsyncGameAssets(gameRef mgdb.Game) {
+	game, err := screen.client.GetGame(gameRef.GameID)
+	if err != nil {
+		fmt.Println("LoadAsyncGameAssets GameID  not found", gameRef.GameID)
+		return
+	}
+	gameID := game.GameID
+	fmt.Println("LoadAsyncGameAssets")
+	fmt.Printf("%#v\n", game)
 	// load all go routines in parallel
 	if screen.screenshot != &LoadingImage {
 		screen.screenshot = &LoadingImage
-		go func() {
-			screenshot, err := screen.client.GetGameScreenshot(gameID)
-			if err != nil {
-				fmt.Println("unable to load screenshot ", gameID)
-			}
-			screen.guiState.AsyncChan <- func(gui *GUI) {
-				screen.screenshot = screenshot
-				gui.State.IsChanged = true
-				fmt.Println("setting screenshot")
-			}
-		}()
+		if game.ScreenshotHash != "" {
+			go func() {
+				screenshot, err := screen.client.GetGameImage(game.ScreenshotHash)
+				if err != nil {
+					fmt.Println("unable to load screenshot ", gameID)
+				}
+				screen.guiState.AsyncChan <- func(gui *GUI) {
+					screen.screenshot = screenshot
+					gui.State.IsChanged = true
+					fmt.Println("setting screenshot")
+				}
+			}()
+		}
 	}
 
 	if screen.titleScreen != &LoadingImage {
 		screen.titleScreen = &LoadingImage
-		go func() {
-			titleScreen, err := screen.client.GetGameTitleScreen(gameID)
-			if err != nil {
-				fmt.Println("unable to load titleScreen ", gameID)
-			}
-			screen.guiState.AsyncChan <- func(gui *GUI) {
-				screen.titleScreen = titleScreen
-				gui.State.IsChanged = true
-				fmt.Println("setting titleScreen")
-			}
-		}()
+		if game.TitleScreenHash != "" {
+			go func() {
+				titleScreen, err := screen.client.GetGameImage(game.TitleScreenHash)
+				if err != nil {
+					fmt.Println("unable to load titleScreen ", gameID)
+				}
+				screen.guiState.AsyncChan <- func(gui *GUI) {
+					screen.titleScreen = titleScreen
+					gui.State.IsChanged = true
+					fmt.Println("setting titleScreen")
+				}
+			}()
+		}
 	}
 
 	if screen.descriptionImg != &LoadingImage {
@@ -225,7 +236,6 @@ func (screen *ScreenGames) LoadAsyncGameAssets(gameID int) {
 		screen.descriptionImg = &LoadingImage
 		surfaceRect := screen.guiState.Surface.Image.Rect
 		go func() {
-			game, err := screen.client.GetGame(gameID)
 			if err != nil {
 				fmt.Println("unable to load Game", gameID)
 			}
@@ -243,7 +253,7 @@ func (screen *ScreenGames) LoadAsyncGameAssets(gameID int) {
 			}
 			infoImg = DrawText(infoText, surfaceRect, image.Transparent)
 
-			charsPerLine := 45
+			charsPerLine := 55
 			descriptionLines := make([]string, 0)
 			descriptionLines = append(descriptionLines, "Description:")
 			if game.Description != "" {
@@ -392,6 +402,7 @@ func ScanMGDBGames(client *mgdb.MGDBClient) (chan string, chan bool) {
 			return
 		}
 
+		bPrint("Flushing existing Game indexes")
 		// TODO: reset IsIndexed on Games table to 0
 		if err := client.FlushGamesIndex(); err != nil {
 			fmt.Println(err)
@@ -400,6 +411,8 @@ func ScanMGDBGames(client *mgdb.MGDBClient) (chan string, chan bool) {
 			return
 		}
 
+		bPrint("Deep searching all Games Dirs for Supported SystemIDs")
+		bPrint("This will take a few minutes...")
 		systems := mrext.GetSystemsByIDsString(info.SupportedSystemIds)
 		roms, err := mrext.GetSystemsGamesPaths(systems)
 		if err != nil {
@@ -410,15 +423,18 @@ func ScanMGDBGames(client *mgdb.MGDBClient) (chan string, chan bool) {
 
 		bPrint(fmt.Sprintf("Found %v ROMs", len(roms)))
 		indexedCount := 0
+		unknownCount := 0
+		errorCount := 0
 		for _, romAbsPath := range roms {
 			fmt.Println(romAbsPath)
 			romRelPath, ok := mrext.GetRelativeGamePath(romAbsPath)
 			if !ok {
 				bPrint("Relative Pathing Error on Scanned ROM")
 				bPrint(romRelPath)
+				errorCount++
 				continue
 			}
-			bPrint(fmt.Sprintf("Found %v", romRelPath))
+			//bPrint(fmt.Sprintf("Found %v", romRelPath))
 
 			// Match to DB
 			// Update Game row IsIndexed
@@ -428,19 +444,29 @@ func ScanMGDBGames(client *mgdb.MGDBClient) (chan string, chan bool) {
 			gameId, findErr := client.FindGameIdFromFilename(indexedRom.FileName)
 			if findErr != nil {
 				bPrint("Error attempting filename match in Collection")
-				bPrint(romRelPath)
+				bPrint(fmt.Sprintf("Indexing to ~Unknown: %v", indexedRom.FileName))
+				if ok, err := client.IndexGameRom(indexedRom); !ok {
+					bPrint("Error Indexing ROM via MGDB Query")
+					bPrint(err.Error())
+					errorCount++
+					continue
+				}
+				unknownCount++
 				continue
 			}
 			indexedRom.GameID = gameId
-
-			// Even 0 IDs should be indexed as unknown
-			client.IndexGameRom(indexedRom)
-
+			if ok, err := client.IndexGameRom(indexedRom); !ok {
+				bPrint("Error Indexing ROM via MGDB Query")
+				bPrint(err.Error())
+				errorCount++
+				continue
+			}
 			indexedCount++
-			bPrint(fmt.Sprintf("Indexed %v", romRelPath))
-
+			//bPrint(fmt.Sprintf("Indexed %v", romRelPath))
 		}
-		bPrint(fmt.Sprintf("Indexed %v ROMs", len(roms)))
+		bPrint(fmt.Sprintf("Indexed %v ROMs", indexedCount))
+		bPrint(fmt.Sprintf("Indexed %v ~Unknown ROMs", unknownCount))
+		bPrint(fmt.Sprintf("Failed indexing %v ROMs", errorCount))
 
 		completedOk <- true
 	}()

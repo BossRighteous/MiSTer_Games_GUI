@@ -60,9 +60,6 @@ func (mgdb *MGDBClient) GetGameList() ([]Game, error) {
 		if err != nil {
 			return gameList, err
 		}
-		if game.GameID == 0 {
-			continue
-		}
 		gameList = append(gameList, game)
 	}
 	err = rows.Err()
@@ -78,21 +75,31 @@ func (mgdb *MGDBClient) GetGame(gameID int) (Game, error) {
 		return game, &DBNilError{}
 	}
 	err := mgdb.db.QueryRow(
-		"select Game.GameID, Game.Name, Genre.Name as GenreName, Game.IsIndexed, Game.Rating, "+
-			"Game.ReleaseDate, Game.Developer, Game.Publisher, Game.Players, Game.Description "+
+		"select Game.GameID, Game.Name, Genre.Name as GenreName, Game.GenreID, "+
+			"Game.IsIndexed, Game.Rating, "+
+			"Game.ReleaseDate, Game.DeveloperID, Developer.Name as DeveloperName, "+
+			"Game.PublisherID, Publisher.Name as PublisherName, Game.Players, Game.Description, "+
+			"Game.ScreenshotHash, Game.TitleScreenHash "+
 			"from Game JOIN Genre on Genre.GenreID = Game.GenreID "+
+			"JOIN Developer on Developer.DeveloperID = Game.DeveloperID "+
+			"JOIN Publisher on Publisher.PublisherID = Game.PublisherID "+
 			"where Game.GameID = ?", gameID,
 	).Scan(
 		&game.GameID,
 		&game.Name,
 		&game.Genre,
+		&game.GenreId,
 		&game.IsIndexed,
 		&game.Rating,
 		&game.ReleaseDate,
+		&game.DeveloperID,
 		&game.Developer,
+		&game.PublisherID,
 		&game.Publisher,
 		&game.Players,
 		&game.Description,
+		&game.ScreenshotHash,
+		&game.TitleScreenHash,
 	)
 	if err != nil {
 		return game, err
@@ -125,38 +132,31 @@ func (mgdb *MGDBClient) GetIndexedRoms(gameID int) ([]IndexedRom, error) {
 	return romList, nil
 }
 
-func (mgdb *MGDBClient) getGameImage(table string, gameID int) (*image.Image, error) {
+func (mgdb *MGDBClient) GetGameImage(imgHash string) (*image.Image, error) {
 	if mgdb.db == nil {
 		return nil, &DBNilError{}
 	}
-	var screen Screenshot
-	fmt.Println("querying gameID", gameID)
+
+	var imgBlob ImageBlob
+	fmt.Println("querying ImageBlob Hash", imgHash)
 	err := mgdb.db.QueryRow(
-		fmt.Sprintf("select GameID, Bytes from "+table+" where GameID = %v", gameID),
+		fmt.Sprintf("select Hash, Bytes from ImageBlob where Hash = '%v'", imgHash),
 	).Scan(
-		&screen.GameID,
-		&screen.Bytes,
+		&imgBlob.Hash,
+		&imgBlob.Bytes,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	var screenImg *image.Image
-	if screen.Bytes != nil && len(screen.Bytes) > 0 {
-		screenImg, err = img.DecodeImageBytes(&screen.Bytes)
+	if imgBlob.Bytes != nil && len(imgBlob.Bytes) > 0 {
+		screenImg, err = img.DecodeImageBytes(&imgBlob.Bytes)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return screenImg, nil
-}
-
-func (mgdb *MGDBClient) GetGameScreenshot(gameID int) (*image.Image, error) {
-	return mgdb.getGameImage("Screenshot", gameID)
-}
-
-func (mgdb *MGDBClient) GetGameTitleScreen(gameID int) (*image.Image, error) {
-	return mgdb.getGameImage("TitleScreen", gameID)
 }
 
 func (mgdb *MGDBClient) FlushGamesIndex() error {
@@ -175,21 +175,17 @@ func (mgdb *MGDBClient) FlushGamesIndex() error {
 }
 
 func (mgdb *MGDBClient) FindGameIdFromFilename(filename string) (int, error) {
-	var rom GamelistRom
+	slug := SlugifyString(filename)
+	var rom SlugRom
 	err := mgdb.db.QueryRow(
-		fmt.Sprintf("select FileName, GameID from GamelistRom where FileName LIKE '%v'", filename),
+		fmt.Sprintf("select Slug, GameID from SlugRom where Slug = '%v'", slug),
 	).Scan(
-		&rom.FileName,
+		&rom.Slug,
 		&rom.GameID,
 	)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return 0, err
-		}
-		// try slug
-		slug := SlugifyString(filename)
-		if slug != filename {
-			return mgdb.FindGameIdFromFilename(slug)
 		}
 		// Otherwise, no real error, just no match
 		return 0, nil
@@ -205,8 +201,8 @@ func (mgdb *MGDBClient) IndexGameRom(rom IndexedRom) (bool, error) {
 
 	stmt, err := mgdb.db.Prepare(
 		"insert into IndexedRom(" +
-			"Path, FileName, FileExt, GameID" +
-			") values (?, ?, ?, ?)",
+			"Path, FileName, FileExt, GameID, SupportedSystemIds" +
+			") values (?, ?, ?, ?, ?)",
 	)
 	if err != nil {
 		return false, err
@@ -216,6 +212,7 @@ func (mgdb *MGDBClient) IndexGameRom(rom IndexedRom) (bool, error) {
 		rom.FileName,
 		rom.FileExt,
 		rom.GameID,
+		rom.SupportedSystemIds,
 	); err != nil {
 		return false, err
 	}

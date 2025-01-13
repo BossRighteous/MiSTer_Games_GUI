@@ -60,6 +60,9 @@ func (screen *ScreenCollections) Setup() {
 	{
 		// Fetch list of MGDB Files from main dir
 		collectionsPath := filepath.Clean(screen.guiState.Settings.CollectionsPath)
+
+		// TODO: inspect path for /media/usb/ and try /media/usb{0-5}/
+
 		mgdbs, _ := filepath.Glob(filepath.Join(collectionsPath, "*.mgdb"))
 		fmt.Println(collectionsPath, mgdbs)
 

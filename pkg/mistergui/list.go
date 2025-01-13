@@ -285,7 +285,7 @@ func (item *GameListItem) OnTick() {
 
 func (item *GameListItem) OnEnter() {
 	fmt.Println("Loading Async Assets")
-	item.screen.LoadAsyncGameAssets(item.Game.GameID)
+	item.screen.LoadAsyncGameAssets(item.Game)
 }
 
 func (item *GameListItem) OnExit() {
