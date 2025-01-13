@@ -25,7 +25,7 @@ func ParseIniSettings(iniPath string) *Settings {
 		Modeline:            "6.700 320 336 367 426 240 244 247 262",
 		FrameRate:           60,
 		Interlace:           false,
-		CollectionsPath:     "/media/fat/_Scripts/mistergamesgui/collections",
+		CollectionsPath:     "/media/fat/Scripts/mistergamesgui/collections",
 		GroovyRBFPath:       "/media/fat/_Utility/Groovy_20240912.rbf",
 		GroovyClientDelayMS: 5000,
 		IsDev:               false,
