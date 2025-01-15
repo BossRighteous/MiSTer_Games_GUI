@@ -80,7 +80,9 @@ func Clean() {
 func buildApp(a app, out string) {
 	if a.ldFlags == "" {
 		env := map[string]string{
-			"GOPROXY": "https://goproxy.io,direct",
+			"GOPROXY":    "https://goproxy.io,direct",
+			"GOMEMLIMIT": "50MiB",
+			"GOGC":       "25",
 		}
 		_ = sh.RunWithV(env, "go", "build", "-o", out, a.path)
 	} else {
@@ -88,6 +90,8 @@ func buildApp(a app, out string) {
 			"GOPROXY":     "https://goproxy.io,direct",
 			"CGO_ENABLED": "1",
 			"CGO_LDFLAGS": a.ldFlags,
+			"GOMEMLIMIT":  "50MiB",
+			"GOGC":        "25",
 		}
 		_ = sh.RunWithV(staticEnv, "go", "build", "--ldflags", "-linkmode external -extldflags -static", "-o", out, a.path)
 	}

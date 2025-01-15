@@ -31,14 +31,15 @@ func main() {
 	frameBuffer = make([]uint8, int(modeline.HActive)*int(modeline.VActive)*mistergui.BGR8BytesPerPixel)
 
 	// Load Core and wait
-	if !settings.IsDev {
-		coreErr := groovymister.LaunchGroovyCore(settings.GroovyRBFPath)
-		if coreErr != nil {
-			fmt.Println(coreErr)
-			return
-		}
-		time.Sleep(time.Duration(settings.GroovyClientDelayMS) * time.Millisecond)
-	}
+	/*
+		if !settings.IsDev {
+			coreErr := groovymister.LaunchGroovyCore(settings.GroovyRBFPath)
+			if coreErr != nil {
+				fmt.Println(coreErr)
+				return
+			}
+			time.Sleep(time.Duration(settings.GroovyClientDelayMS) * time.Millisecond)
+		}*/
 
 	udpClient := groovymister.NewUdpClient(settings.MiSTerHost, int32(settings.UdpMtuSize))
 

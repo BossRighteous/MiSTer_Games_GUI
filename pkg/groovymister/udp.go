@@ -138,7 +138,7 @@ func (client *UdpClient) PollInput() (chan GroovyInputPacket, chan bool) {
 func NewUdpClient(host string, mtuBlockSize int32) UdpClient {
 	var client UdpClient
 	client.host = host
-	conn, err := net.ListenPacket("udp4", ":32100")
+	conn, err := net.ListenPacket("udp4", ":32110")
 	if err != nil {
 		panic(err)
 	}
@@ -146,7 +146,7 @@ func NewUdpClient(host string, mtuBlockSize int32) UdpClient {
 	if err != nil {
 		panic(err)
 	}
-	iConn, err := net.ListenPacket("udp4", ":32101")
+	iConn, err := net.ListenPacket("udp4", ":32111")
 	if err != nil {
 		panic(err)
 	}
