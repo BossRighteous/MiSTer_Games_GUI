@@ -81,7 +81,9 @@ ssh root@{misterIP}
 cd /media/fat/Scripts
 mkdir mistergamesgui
 cd mistergamesgui
-wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/beta/mistergamesgui.sh"
+wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/beta/load-mistergamesgui.sh"
+wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/beta/mistergamesgui"
+wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/beta/mistergamesgui.ini"
 mkdir collections
 cd collections
 

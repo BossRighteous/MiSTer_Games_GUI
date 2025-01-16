@@ -14,6 +14,8 @@ type Settings struct {
 	Interlace           bool
 	CollectionsPath     string
 	GroovyRBFPath       string
+	GroovyCoreDelayMS   int
+	LoadGroovyCore      bool
 	GroovyClientDelayMS int
 	IsDev               bool
 }
@@ -27,7 +29,9 @@ func ParseIniSettings(iniPath string) *Settings {
 		Interlace:           false,
 		CollectionsPath:     "/media/fat/Scripts/mistergamesgui/collections",
 		GroovyRBFPath:       "/media/fat/_Utility/Groovy_20240912.rbf",
-		GroovyClientDelayMS: 5000,
+		GroovyCoreDelayMS:   2000,
+		LoadGroovyCore:      true,
+		GroovyClientDelayMS: 10000,
 		IsDev:               false,
 	}
 
@@ -76,6 +80,16 @@ func ParseIniSettings(iniPath string) *Settings {
 		iniGroovyRbfPath := section.Key("groovy_rbf_path").String()
 		if iniGroovyRbfPath != "" {
 			settingsDefault.GroovyRBFPath = iniGroovyRbfPath
+		}
+
+		iniCoreDelayMs, err := section.Key("groovy_core_delay_ms").Int()
+		if err == nil && iniCoreDelayMs > 0 {
+			settingsDefault.GroovyCoreDelayMS = iniCoreDelayMs
+		}
+
+		iniLoadCore, err := section.Key("load_groovy_core").Bool()
+		if err == nil {
+			settingsDefault.LoadGroovyCore = iniLoadCore
 		}
 
 		iniClientDelayMs, err := section.Key("groovy_client_delay_ms").Int()

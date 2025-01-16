@@ -29,15 +29,17 @@ func main() {
 	fmt.Println(modeline)
 
 	// Load Core and wait
-	/*
-		if !settings.IsDev {
-			coreErr := groovymister.LaunchGroovyCore(settings.GroovyRBFPath)
-			if coreErr != nil {
-				fmt.Println(coreErr)
-				return
-			}
-			time.Sleep(time.Duration(settings.GroovyClientDelayMS) * time.Millisecond)
-		}*/
+	if settings.LoadGroovyCore {
+		fmt.Println(fmt.Sprintf("Waiting %v ms to load Groovy Core", settings.GroovyCoreDelayMS))
+		time.Sleep(time.Duration(settings.GroovyCoreDelayMS) * time.Millisecond)
+		coreErr := groovymister.LaunchGroovyCore(settings.GroovyRBFPath)
+		if coreErr != nil {
+			fmt.Println(coreErr)
+			return
+		}
+		fmt.Println(fmt.Sprintf("Waiting %v ms to load Client script", settings.GroovyClientDelayMS))
+		time.Sleep(time.Duration(settings.GroovyClientDelayMS) * time.Millisecond)
+	}
 
 	udpClient := groovymister.NewUdpClient(settings.MiSTerHost, int32(settings.UdpMtuSize))
 
