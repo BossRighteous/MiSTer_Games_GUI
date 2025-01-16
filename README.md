@@ -25,7 +25,7 @@ I can help try to debug Groovy Core issues, but the author [psakhis](https://git
 ## What it does:
 
 - **Fast, responsive GUI for navigating your games and loading them directly from the GUI**
-- Provides [full media libraries](https://github.com/BossRighteous/MiSTer_Games_Data_Utils) for common MGL Loadable Systems - [mrext](https://github.com/wizzomafizzo/mrext) & [Zaparoo](https://github.com/ZaparooProject/zaparoo-core)
+- Provides [full media libraries](https://github.com/BossRighteous/MiSTer_Games_Database_MGDB) for common MGL Loadable Systems - [mrext](https://github.com/wizzomafizzo/mrext) & [Zaparoo](https://github.com/ZaparooProject/zaparoo-core)
 - No need to scrape your library on the internet!
 - Games as primary browsing unit, ROMs are children
 - Low-resolution, 15khz analog display friendly
