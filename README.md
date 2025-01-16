@@ -4,6 +4,8 @@ Low-resolution analog friendly rich-media GUI for your MiSTer FPGA game library.
 
 "They" said it was impossible? At least Sorg doesn't have to approve a core :|
 
+[Imgur Preview GIF](https://imgur.com/a/mister-gui-wip-2025-01-05-1xgubYu)
+
 ## Public Beta
 
 After many hours of work, rework; failure and success I've reached an operable POC!
