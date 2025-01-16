@@ -1,55 +1,120 @@
-### Notice
-This is currently under active development. This is Babby's First Go project so feel free to recommend changes. Channel structures are still a bit wonky I think.
+# MiSTer Games GUI (MiSTer FPGA)
 
-# MiSTer_Games_GUI
-Low-resolution analog friendly MiSTer script GUI for your game library.
+Low-resolution analog friendly rich-media GUI for your MiSTer FPGA game library.
 
-Aiming for something like EmulationStation with filesystem browsing paired to Meta data and images.
+"They" said it was impossible? At least Sorg doesn't have to approve a core :|
 
-Will run on MiSTer ARM chip, using Groovy Mister core for headless graphics processing.
+## Public Beta
 
-Will include utilities for data processing from scrapper API(s)? 
+After many hours of work, rework; failure and success I've reached an operable POC!
 
-# WIP local dev direction
-- clone repo
-- cd {repo_path}
-- go run cmd/mistergamesgui/main.go
+Instead of try to perfect everything I see wrong, now is the time to get it out and collect feedback and bug reports.
 
-# WIP Install direction (unstable at the moment)
-- mister ssh
-- cd /media/fat/Scripts
-- wget https://github.com/BossRighteous/MiSTer_Games_GUI/blob/main/_bin/linux_arm/mistergamesgui
-- chmod 755
-- (Open the Groovy Core on the MiSTer, need to pin down my old version or update :/)
-- ./mistergamesgui
+Discord channel for discussion and bug reports TBD
 
-## Goals
-- Provide a simple analog friendly graphical interface for browsing your library
-- Installable via DB json ini
-- Go executable build for Cyclone V chip
-- Require no external dependencies
-- Balance usable interface concerns and responsiveness with single threaded low CPU/Memory demand
+If you are worried about SDCard writes, please avoid downloading all collections. They are subject to change during Beta.
 
-## MiSTer Requirements
-The GUI requires the (currently dev) GroovyMiSTer core for meaningful operation.
-Developing against build Groovy_20240327.rbf
+**Groovy Core Note**
 
-## Go Supported Features
-- UDP connection to GroovyMiSTer via localhost loopback
-- INI settings for modeline etc
-- GroovyMister API basic implementation
-- Image/TTF-font embeds and rendering w/ transparency
-- FPS display
-- Basic goroutine/channel support for lazy-loads against blit cycle
-- Loading meta JSON from disk into overlay Images
-- Input support for 2 9 Button digital controllers
+I can help try to debug Groovy Core issues, but the author [psakhis](https://github.com/psakhis) unfortunately passed away late last year. It is an amazing core but please be understanding there is no active developer that has taken on a primary fork. There are also operational unknowns. IT'S USUALLY A NETWORK ISSUE, which shouldn't be a problem on loopback for this case.
 
-## Go Roadmap
-- Directory navigation
-- MGL temp writes for Core/Game loading
-- Display meta-data for selected game
-- Display image(s) for selected game
-- Interlace support
-- Alternate or adaptive GUI for 480p vs 240p
-- Scaper to Meta routine
-- Meta dumps offloaded to static hosting to avoid scraping needs
+
+
+## What it does:
+
+- **Fast, responsive GUI for navigating your games and loading them directly from the GUI**
+- Provides [full media libraries](https://github.com/BossRighteous/MiSTer_Games_Data_Utils) for common MGL Loadable Systems - [mrext](https://github.com/wizzomafizzo/mrext) & [Zaparoo](https://github.com/ZaparooProject/zaparoo-core)
+- No need to scrape your library on the internet!
+- Games as primary browsing unit, ROMs are children
+- Low-resolution, 15khz analog display friendly
+- Minimal input button requirments (NES / JAMMA interfaces)
+- Executes as a Script from OSD
+- Uses the wonderful [GroovyMister Core](https://github.com/psakhis/Groovy_MiSTer) as an interface for Video and Input handling
+
+## What it does not do:
+
+- **Replace the built in OSD Browser experience!!**
+- **Seriously, this is not meant for primary on-boot loading!**
+- Load the cores/script quickly. There is a timing based handshake.
+- Guarantee handshake with the core and script 100% of the time. It's a brittle timing process!
+- Cover the entire MiSTer core library (Limited to MGL and RetroarchDB overlap)
+- Animation or video
+- Bridge and index across systems. System DBs and indexes are standalone
+
+## Known Feature Roadmap
+
+- ROM Index reports for debugging - NDJSON
+- Improvement of UI layout, overscan, navigation
+- Image scaling/centering. Description scrolling
+- Ability to hold directional input for repeat fire.
+- Modifier key for D-pad -> List start/end/next-alpha
+- Ability to navigate via PS2/keyboard
+- Arcade MGDB curation in other repo
+- Fuzzy /usb[0-5]/ path resolver for collections_path
+- Input idle timeout with slideshow/random routine or self-exit
+- Integrated collection manager (download, update, remove)
+- Integrated script self-update
+- Improved detection and handling of Groovy core handshake
+
+## What it may be capable of doing later
+
+- Being run via a separate daemon with a hotkey-combo listener to return to Groovy/GUI on demand
+- Trim DB on demand to fit local index, remove unused DB entries
+- Search by title
+- Filtering by Genre, Developer, Publisher
+- Supporting Custom multi-system Collections (All franchise games, favorites, etc)
+- Matching by hash or ROM data - currently requires RetroarchDB NoIntro/Tosec/Redump naming for match
+
+
+# Beta Installation Directions
+
+Replace {} with your inputs
+
+**Assumes GroovyMiSTer core is installed and tested with bouncing logo**
+
+To be executed via `ssh root@misterIP`
+```
+ssh root@{misterIP}
+# Password: 1
+cd /media/fat/Scripts
+mkdir mistergamesgui
+cd mistergamesgui
+wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/latest/mistergamesgui.sh"
+mkdir collections
+cd collections
+
+# Download Collections
+wget "{Links from https://github.com/BossRighteous/MiSTer_Games_Database_MGDB/releases/tag/latest}"
+# Example https://github.com/BossRighteous/MiSTer_Games_Database_MGDB/releases/download/latest/SNES.Console.1990-11-21.mgdb
+
+# Open the Groovy core via OSD
+# Should see bouncing logo, press primary controller button to activate
+# Run the script!
+cd /media/fat/Scripts/mistergamesgui && ./mistergamesgui.beta.01.sh
+```
+
+**GroovyMiSTer Install directions**
+
+To be executed via `ssh root@misterIP`
+```
+ssh root@{misterIP}
+# Password: 1
+cd /media/fat/
+wget "https://github.com/psakhis/Groovy_MiSTer/releases/download/0.7/MiSTer_groovy"
+cd _Utility
+wget "https://github.com/psakhis/Groovy_MiSTer/releases/download/0.7/Groovy_20240922.rbf"
+cd ..
+
+# This must be done for any active .ini!
+nano {MiSTer}.ini
+
+# ADD LINES TO BOTTOM OF INI
+[Groovy]
+main=MiSTer_groovy
+```
+
+## Thank you
+- [psakhis](https://github.com/psakhis) for your amazing Core and collaborating on the GMC Command runner. I wish you could see this.
+- [wizzomafizzo](https://wizzo.dev/) for the mrext project which made programming the loaders and building for target a breeze.
+- [#nogpu GroovyArcade discord](https://discord.com/channels/649595547308785664/1030412595884204082) for all the help over the last year
+- [lllllllllllllllllll](https://forums.somethingawful.com/showthread.php?threadid=4058840#post542644664) For being the only fuckin' person to respond to my devlog thread on the SA Forums (lol. lmao even.)
