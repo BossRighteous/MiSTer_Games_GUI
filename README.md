@@ -74,6 +74,8 @@ Replace {} with your inputs
 
 **Assumes GroovyMiSTer core is installed and tested with bouncing logo**
 
+The script features some painfully long delays that will be tweaked, but can be changed via INI
+
 To be executed via `ssh root@misterIP`
 ```
 ssh root@{misterIP}
@@ -93,8 +95,10 @@ wget "{Links from https://github.com/BossRighteous/MiSTer_Games_Database_MGDB/re
 
 # Open the Groovy core via OSD
 # Should see bouncing logo, press primary controller button to activate
-# Run the script!
-cd /media/fat/Scripts/mistergamesgui && ./mistergamesgui.sh
+# Run the script via shell
+cd /media/fat/Scripts/mistergamesgui && ./mistergamesgui
+
+# OR reboot and from OSD run Scripts > mistergamesgui > load-mistergamesgui.sh
 ```
 
 **GroovyMiSTer Install directions**
