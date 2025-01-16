@@ -132,7 +132,7 @@ func (mgdb *MGDBClient) GetIndexedRoms(gameID int) ([]IndexedRom, error) {
 	return romList, nil
 }
 
-func (mgdb *MGDBClient) GetGameImage(imgHash string) (*image.Image, error) {
+func (mgdb *MGDBClient) GetGameImage(imgHash string) (image.Image, error) {
 	if mgdb.db == nil {
 		return nil, &DBNilError{}
 	}
@@ -156,7 +156,7 @@ func (mgdb *MGDBClient) GetGameImage(imgHash string) (*image.Image, error) {
 			return nil, err
 		}
 	}
-	return screenImg, nil
+	return *screenImg, nil
 }
 
 func (mgdb *MGDBClient) FlushGamesIndex() error {

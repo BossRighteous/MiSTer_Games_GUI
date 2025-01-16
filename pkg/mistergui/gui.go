@@ -11,7 +11,6 @@ import (
 
 type TickData struct {
 	FrameCount  uint32
-	Delta       float64
 	InputPacket groovymister.GroovyInputPacket
 }
 
@@ -19,12 +18,12 @@ type GUIState struct {
 	Screen    IScreen
 	IsChanged bool
 	IsLoading bool
-	AsyncChan chan AsyncCallback
-	Surface   *Surface
-	Input     *groovymister.GroovyInput
-	Modeline  *groovymister.Modeline
-	QuitChan  chan bool
-	Settings  *settings.Settings
+	//AsyncChan chan AsyncCallback
+	Surface  *Surface
+	Input    *groovymister.GroovyInput
+	Modeline *groovymister.Modeline
+	QuitChan chan bool
+	Settings *settings.Settings
 }
 
 func (state *GUIState) PushScreen(newScreen IScreen) {
@@ -44,25 +43,27 @@ func (state *GUIState) PopScreen() {
 		state.Screen = parent
 		state.Screen.OnEnter()
 	}
+	state.IsChanged = true
 }
 
 type GUI struct {
 	State *GUIState
 
-	TickChan chan TickData
+	//TickChan chan TickData
 	QuitChan chan bool
 	// Allow channel based mutation via callbacks to avoid races
-	AsyncCallbackChan chan AsyncCallback
-	FrameBufferChan   chan []uint8
+	//AsyncCallbackChan chan AsyncCallback
+	//FrameBufferChan   chan []uint8
+	UdpClient *groovymister.UdpClient
 }
 
 type AsyncCallback func(gui *GUI)
 
 var P0 image.Point = image.Point{0, 0}
 
-func (gui *GUI) Setup(modeline *groovymister.Modeline, settings *settings.Settings) {
+func (gui *GUI) Setup(modeline *groovymister.Modeline, settings *settings.Settings, udpClient *groovymister.UdpClient) {
 	fmt.Println("setting up GUI")
-
+	gui.UdpClient = udpClient
 	p0 := image.Point{0, 0}
 	surface := NewSurface(modeline.HActive, modeline.VActive, modeline.Interlace)
 	bgColor := ColorBGR8{uint8(104), uint8(66), uint8(13)}
@@ -77,12 +78,12 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline, settings *settings.Settin
 	gui.State = &GUIState{
 		Screen:    nil,
 		IsChanged: false,
-		AsyncChan: gui.AsyncCallbackChan,
-		Surface:   surface,
-		Input:     &groovymister.GroovyInput{},
-		Modeline:  modeline,
-		QuitChan:  gui.QuitChan,
-		Settings:  settings,
+		//AsyncChan: gui.AsyncCallbackChan,
+		Surface:  surface,
+		Input:    &groovymister.GroovyInput{},
+		Modeline: modeline,
+		QuitChan: gui.QuitChan,
+		Settings: settings,
 	}
 
 	rootScreen := &ScreenCollections{parent: nil, guiState: gui.State, name: "Root"}
@@ -109,7 +110,7 @@ func (gui *GUI) Setup(modeline *groovymister.Modeline, settings *settings.Settin
 		}
 	}()*/
 
-	gui.FrameBufferChan <- gui.State.Surface.BGRbytes(true)
+	gui.UdpClient.CmdBlit(gui.State.Surface.BGRbytes(true))
 }
 
 func (gui *GUI) OnTick(tick TickData) {
@@ -125,7 +126,8 @@ func (gui *GUI) OnTick(tick TickData) {
 
 	if gui.State.IsChanged {
 		gui.State.Screen.Render()
-		gui.FrameBufferChan <- gui.State.Surface.BGRbytes(true)
+		//gui.FrameBufferChan <- gui.State.Surface.BGRbytes(true)
+		gui.UdpClient.CmdBlit(gui.State.Surface.BGRbytes(true))
 		gui.State.IsChanged = false
 	}
 }
@@ -142,11 +144,11 @@ func listen(gui *GUI) {
 		case <-gui.QuitChan:
 			fmt.Println("gui.quitChan recv, closing goroutine")
 			return
-		case tickData := <-gui.TickChan:
-			gui.OnTick(tickData)
-		case promiseFn := <-gui.AsyncCallbackChan:
-			gui.State.IsChanged = true
-			promiseFn(gui)
+			//case tickData := <-gui.TickChan:
+			//	gui.OnTick(tickData)
+			//case promiseFn := <-gui.AsyncCallbackChan:
+			//	gui.State.IsChanged = true
+			//	promiseFn(gui)
 		}
 	}
 }
@@ -154,13 +156,10 @@ func listen(gui *GUI) {
 func NewGUI() *GUI {
 	gui := &GUI{}
 	// Receieve
-	gui.TickChan = make(chan TickData, 1)
+	//gui.TickChan = make(chan TickData, 1)
 	gui.QuitChan = make(chan bool, 1)
 	// Local loopback
-	gui.AsyncCallbackChan = make(chan AsyncCallback, 10)
-	// Send
-	gui.FrameBufferChan = make(chan []uint8, 1)
+	//gui.AsyncCallbackChan = make(chan AsyncCallback, 10)
 	go listen(gui)
 	return gui
-
 }

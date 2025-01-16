@@ -69,7 +69,8 @@ func (screen *ScreenRomSystems) Setup() {
 
 	systems := mrext.GetSystemsByIDsString(info.SupportedSystemIds)
 
-	for _, system := range systems {
+	for _, iSystem := range systems {
+		system := iSystem
 		item := &BasicListItem{
 			label:        fmt.Sprintf("Load as %v", system.Name),
 			list:         screen.list,

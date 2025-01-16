@@ -75,7 +75,9 @@ func (screen *ScreenCollections) Setup() {
 			items = append(items, item)
 		}
 
-		for _, mgdbPath := range mgdbs {
+		for _, iMgdbPath := range mgdbs {
+			// deref iterator
+			mgdbPath := iMgdbPath
 			name, found := utils.CutSuffix(filepath.Base(mgdbPath), filepath.Ext(mgdbPath))
 			if !found {
 				name = filepath.Base(mgdbPath)

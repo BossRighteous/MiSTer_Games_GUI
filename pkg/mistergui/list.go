@@ -284,8 +284,14 @@ func (item *GameListItem) OnTick() {
 }
 
 func (item *GameListItem) OnEnter() {
-	fmt.Println("Loading Async Assets")
-	item.screen.LoadAsyncGameAssets(item.Game)
+	//fmt.Println("Loading Async Assets")
+	//item.screen.LoadAsyncGameAssets(item.Game)
+	game, err := item.screen.client.GetGame(item.Game.GameID)
+	if err != nil {
+		fmt.Println("LoadAsyncGameAssets GameID  not found", item.Game.GameID)
+		return
+	}
+	item.screen.CurrentGame = game
 }
 
 func (item *GameListItem) OnExit() {

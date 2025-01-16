@@ -119,5 +119,7 @@ func GetFirstGamePathFromRelative(relPath string) (string, bool) {
 }
 
 func LoadSystemMGLFromPath(system games.System, path string) {
-	mister.LaunchGame(nil, system, path)
+	err := mister.LaunchGame(&config.UserConfig{}, system, path)
+	fmt.Println(err)
+	fmt.Println("game launched?")
 }
