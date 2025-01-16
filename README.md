@@ -72,7 +72,7 @@ I can help try to debug Groovy Core issues, but the author [psakhis](https://git
 
 Replace {} with your inputs
 
-**Assumes GroovyMiSTer core is installed and tested with bouncing logo**
+**Assumes GroovyMiSTer core is installed and tested with bouncing logo and Joystick Inputs are on**
 
 The script features some painfully long delays that will be tweaked, but can be changed via INI
 
@@ -120,6 +120,9 @@ nano {MiSTer}.ini
 [Groovy]
 main=MiSTer_groovy
 ```
+In the core's OSD menu, please turn on Joysticks:
+- Settings > Server Settings > Send Joysticks: Digital
+- Save settings and reboot/relaod core
 
 ## Thank you
 - [psakhis](https://github.com/psakhis) for your amazing Core and collaborating on the GMC Command runner. I wish you could see this
