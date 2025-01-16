@@ -81,7 +81,7 @@ ssh root@{misterIP}
 cd /media/fat/Scripts
 mkdir mistergamesgui
 cd mistergamesgui
-wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/latest/mistergamesgui.sh"
+wget "https://github.com/BossRighteous/MiSTer_Games_GUI/releases/download/beta/mistergamesgui.sh"
 mkdir collections
 cd collections
 
@@ -116,7 +116,8 @@ main=MiSTer_groovy
 ```
 
 ## Thank you
-- [psakhis](https://github.com/psakhis) for your amazing Core and collaborating on the GMC Command runner. I wish you could see this.
-- [wizzomafizzo](https://wizzo.dev/) for the mrext project which made programming the loaders and building for target a breeze.
+- [psakhis](https://github.com/psakhis) for your amazing Core and collaborating on the GMC Command runner. I wish you could see this
+- [wizzomafizzo](https://wizzo.dev/) for the mrext project which made programming the loaders and building for target a breeze
+- My wife for putting up with my hundreds of hours huddled away on the PC, love you
 - [#nogpu GroovyArcade discord](https://discord.com/channels/649595547308785664/1030412595884204082) for all the help over the last year
 - [lllllllllllllllllll](https://forums.somethingawful.com/showthread.php?threadid=4058840#post542644664) For being the only fuckin' person to respond to my devlog thread on the SA Forums (lol. lmao even.)
