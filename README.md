@@ -92,7 +92,7 @@ wget "{Links from https://github.com/BossRighteous/MiSTer_Games_Database_MGDB/re
 # Open the Groovy core via OSD
 # Should see bouncing logo, press primary controller button to activate
 # Run the script!
-cd /media/fat/Scripts/mistergamesgui && ./mistergamesgui.beta.01.sh
+cd /media/fat/Scripts/mistergamesgui && ./mistergamesgui.sh
 ```
 
 **GroovyMiSTer Install directions**
