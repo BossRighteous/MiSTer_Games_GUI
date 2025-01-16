@@ -12,7 +12,7 @@ After many hours of work, rework; failure and success I've reached an operable P
 
 Instead of try to perfect everything I see wrong, now is the time to get it out and collect feedback and bug reports.
 
-Discord channel for discussion and bug reports TBD
+[Discord channel](https://discord.com/channels/1136235625486487622/1329587234558705724) for discussion and bugs. (Thanks Wizzo!)
 
 If you are worried about SDCard writes, please avoid downloading all collections. They are subject to change during Beta.
 
