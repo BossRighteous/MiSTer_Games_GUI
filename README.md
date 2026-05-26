@@ -1,20 +1,9 @@
+#Archived
+[Go use this instead!](https://zaparoo.org/blog/zaparoo-frontend-v1.0.3/)
+
 # MiSTer Games GUI (MiSTer FPGA)
 
 Low-resolution analog friendly rich-media GUI for your MiSTer FPGA game library.
-
-A personal appeal: \
-I'm just a dude in Chicago that hacked on this in my free time. \
-I'm proud of my work so far and shared it because it's technically working okay. An MVP!
-
-It's certainly not a finished product and was always meant to be a proof of concept 'toy'. \
-In the coming weeks I hope to continue to polish things, and hope some folks enjoy playing with it \
-:)
-
-I don't want this to become a load bearing component for anyone, just a curiosity. \
-I don't have the intent or stamina to support it as a big feature. It's just a hack for fun.
-
-That said, hope you like it! Either as a toy, a curiosity, or something more useful to you.
-
 
 [Imgur Preview GIF](https://imgur.com/a/mister-gui-wip-2025-01-05-1xgubYu)
 
