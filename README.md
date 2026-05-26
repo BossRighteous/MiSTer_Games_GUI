@@ -1,4 +1,5 @@
-#Archived
+# Archived
+
 [Go use this instead!](https://zaparoo.org/blog/zaparoo-frontend-v1.0.3/)
 
 # MiSTer Games GUI (MiSTer FPGA)
